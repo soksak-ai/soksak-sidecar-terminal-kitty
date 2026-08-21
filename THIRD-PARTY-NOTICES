@@ -1,0 +1,35 @@
+THIRD-PARTY NOTICES
+===================
+
+The Kitty provider SDK embeds Kitty under GPL-3.0-only. See LICENSE. The bundled Python runtime
+contains its Python-2.0 license at dist/kitty-provider/runtime/lib/python3.14/LICENSE.txt.
+
+The runtime/lib directory may contain the following dynamically linked libraries. They remain
+separate files and can be replaced by the recipient.
+
+Name          License
+------------  --------------------------------------------------------
+CPython       Python-2.0
+FreeType      FTL
+GLib          LGPL-2.1-or-later
+Graphite2     MIT OR MPL-2.0 OR LGPL-2.1-or-later OR GPL-2.0-or-later
+HarfBuzz      MIT
+Little CMS    MIT
+libpng        libpng-2.0
+OpenSSL       Apache-2.0
+PCRE2         BSD-3-Clause
+xxHash        BSD-2-Clause AND GPL-2.0-or-later
+gettext       GPL-3.0-or-later AND LGPL-2.1-or-later
+
+Source and license information:
+https://github.com/python/cpython
+https://gitlab.freedesktop.org/freetype/freetype
+https://gitlab.gnome.org/GNOME/glib
+https://github.com/silnrsi/graphite
+https://github.com/harfbuzz/harfbuzz
+https://github.com/mm2/Little-CMS
+https://github.com/pnggroup/libpng
+https://github.com/openssl/openssl
+https://github.com/PCRE2Project/pcre2
+https://github.com/Cyan4973/xxHash
+https://git.savannah.gnu.org/git/gettext.git
