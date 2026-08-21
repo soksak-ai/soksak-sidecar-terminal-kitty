@@ -5,7 +5,7 @@ fn sidecar_manifest_declares_the_staged_process() {
     let manifest: serde_json::Value = serde_json::from_str(
         &std::fs::read_to_string("sidecar.json").expect("read sidecar.json"),
     ).expect("parse sidecar.json");
-    assert_eq!(manifest["spec"], "soksak-spec-sidecar@0.0.1");
+    assert!(manifest.get("spec").is_none());
     assert_eq!(manifest["id"], "soksak-sidecar-terminal-kitty");
     assert_eq!(manifest["version"], "0.0.1");
     assert_eq!(manifest["interface"]["version"], "0.0.1");
