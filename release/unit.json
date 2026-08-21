@@ -1,0 +1,10 @@
+{
+  "id": "soksak-sidecar-terminal-kitty",
+  "version": "0.0.1",
+  "releaseTag": "v0.0.1",
+  "repository": "https://github.com/soksak-ai/soksak-sidecar-terminal-kitty",
+  "interface": {
+    "id": "soksak-spec-sidecar-terminal",
+    "version": "0.0.1"
+  }
+}

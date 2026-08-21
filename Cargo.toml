@@ -1,0 +1,27 @@
+[package]
+name = "soksak-sidecar-terminal-kitty"
+version = "0.0.1"
+edition = "2021"
+publish = false
+license = "GPL-3.0-only"
+description = "Kitty terminal-state provider for the Soksak terminal recovery contract."
+build = "build.rs"
+
+[lib]
+name = "soksak_sidecar_terminal_kitty"
+path = "src/lib.rs"
+
+[[bin]]
+name = "soksak-sidecar-terminal-kitty"
+path = "src/main.rs"
+
+[dependencies]
+soksak-kit-sidecar-terminal = { path = "../../soksak-kits/soksak-kit-sidecar-terminal", features = ["integration-tests"] }
+
+[build-dependencies]
+serde_json = "=1.0.150"
+
+[dev-dependencies]
+soksak-contract-terminal = { path = "../../soksak-contracts/soksak-contract-terminal" }
+
+[workspace]
