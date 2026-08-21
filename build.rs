@@ -1,6 +1,10 @@
 use std::path::PathBuf;
 
 fn main() {
+    let target_os = std::env::var("CARGO_CFG_TARGET_OS").expect("Cargo target OS");
+    if target_os != "macos" && target_os != "linux" {
+        panic!("Kitty provider 0.0.1 supports macOS and Linux; target OS is {target_os}");
+    }
     let sdk = std::env::var("SOKSAK_KITTY_PROVIDER_SDK")
         .ok()
         .filter(|value| !value.is_empty())
@@ -20,7 +24,13 @@ fn main() {
     let value: serde_json::Value =
         serde_json::from_slice(&std::fs::read(&config).expect("read Kitty Python config"))
             .expect("parse Kitty Python config");
-    let library_dir = value["library_dir"].as_str().expect("Python library_dir");
+    let configured_library_dir = value["library_dir"].as_str().expect("Python library_dir");
+    let bundled_library_dir = sdk.join("runtime/lib");
+    let library_dir = if bundled_library_dir.is_dir() {
+        bundled_library_dir.to_string_lossy().into_owned()
+    } else {
+        configured_library_dir.to_string()
+    };
     let library = value["library"].as_str().expect("Python library");
     println!(
         "cargo:rustc-link-search=native={}",
@@ -30,7 +40,12 @@ fn main() {
     println!("cargo:rustc-link-search=native={library_dir}");
     println!("cargo:rustc-link-lib={library}");
     if std::env::var_os("SOKSAK_KITTY_BUNDLE_BUILD").is_some() {
-        println!("cargo:rustc-link-arg=-Wl,-rpath,@loader_path/kitty-provider/runtime/lib");
+        let origin = if target_os == "macos" {
+            "@loader_path"
+        } else {
+            "$ORIGIN"
+        };
+        println!("cargo:rustc-link-arg=-Wl,-rpath,{origin}/kitty-provider/runtime/lib");
     } else {
         println!("cargo:rustc-link-arg=-Wl,-rpath,{library_dir}");
     }

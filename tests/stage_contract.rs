@@ -17,4 +17,5 @@ fn bundle_rpath_is_platform_specific() {
     let build = fs::read_to_string(root.join("build.rs")).expect("read build.rs");
     assert!(build.contains("$ORIGIN/kitty-provider/runtime/lib"));
     assert!(build.contains("@loader_path/kitty-provider/runtime/lib"));
+    assert!(build.contains("sdk.join(\"runtime/lib\")"));
 }
