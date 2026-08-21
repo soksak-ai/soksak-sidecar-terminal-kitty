@@ -4,7 +4,8 @@ dist=${1:-dist}
 sdk=${SOKSAK_KITTY_PROVIDER_SDK:?SOKSAK_KITTY_PROVIDER_SDK is required}
 SOKSAK_KITTY_BUNDLE_BUILD=1 cargo build --release --bin soksak-sidecar-terminal-kitty
 mkdir -p "$dist"
-cp target/release/soksak-sidecar-terminal-kitty "$dist/.soksak-sidecar-terminal-kitty.tmp"
+binary="${CARGO_TARGET_DIR:-target}/release/soksak-sidecar-terminal-kitty"
+cp "$binary" "$dist/.soksak-sidecar-terminal-kitty.tmp"
 chmod +x "$dist/.soksak-sidecar-terminal-kitty.tmp"
 mv -f "$dist/.soksak-sidecar-terminal-kitty.tmp" "$dist/soksak-sidecar-terminal-kitty"
 rm -rf "$dist/kitty-provider.next"
