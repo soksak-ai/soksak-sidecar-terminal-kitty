@@ -1,38 +1,38 @@
 mod common;
 
-use common::Unit;
+use common::ProviderMirror;
 use soksak_contract_terminal as contract;
 use soksak_contract_terminal::Fixture;
 
 #[test]
 fn mid_escape_tail() {
-    contract::assert_conforms::<Unit>(Fixture::MidEscapeTail);
+    contract::assert_conforms::<ProviderMirror>(Fixture::MidEscapeTail);
 }
 #[test]
 fn cjk_width() {
-    contract::assert_conforms::<Unit>(Fixture::CjkWidth);
+    contract::assert_conforms::<ProviderMirror>(Fixture::CjkWidth);
 }
 #[test]
 fn alt_screen() {
-    contract::assert_conforms::<Unit>(Fixture::AltScreen);
+    contract::assert_conforms::<ProviderMirror>(Fixture::AltScreen);
 }
 #[test]
 fn private_modes() {
-    contract::assert_conforms::<Unit>(Fixture::PrivateModes);
+    contract::assert_conforms::<ProviderMirror>(Fixture::PrivateModes);
 }
 #[test]
 fn replay_guard() {
-    contract::assert_conforms::<Unit>(Fixture::ReplayGuard);
+    contract::assert_conforms::<ProviderMirror>(Fixture::ReplayGuard);
 }
 #[test]
 fn cold_paint_alt() {
-    contract::assert_conforms::<Unit>(Fixture::ColdPaintAlt);
+    contract::assert_conforms::<ProviderMirror>(Fixture::ColdPaintAlt);
 }
 #[test]
 fn dec_line_drawing() {
-    contract::assert_conforms::<Unit>(Fixture::DecLineDrawing);
+    contract::assert_conforms::<ProviderMirror>(Fixture::DecLineDrawing);
 }
 #[test]
 fn resize_reflow() {
-    contract::assert_resize_reflow::<Unit>();
+    contract::assert_resize_reflow::<ProviderMirror>();
 }
