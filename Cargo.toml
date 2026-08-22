@@ -16,13 +16,13 @@ name = "soksak-sidecar-terminal-kitty"
 path = "src/main.rs"
 
 [dependencies]
-soksak-kit-sidecar-terminal = { path = "../../soksak-kits/soksak-kit-sidecar-terminal", features = ["integration-tests"] }
+soksak-kit-sidecar-terminal = { git = "https://github.com/soksak-ai/soksak-kit-sidecar-terminal", rev = "4af58a772a141b9e4d4258ae5f21a140aa162d82", features = ["integration-tests"] }
 
 [build-dependencies]
 serde_json = "=1.0.150"
 
 [dev-dependencies]
 serde_json = "=1.0.150"
-soksak-contract-terminal = { path = "../../soksak-contracts/soksak-contract-terminal" }
+soksak-contract-terminal = { git = "https://github.com/soksak-ai/soksak-contract-terminal", rev = "cab0691a1a01fca7436ac29f6cc2850245788ea6" }
 
 [workspace]
