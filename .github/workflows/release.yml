@@ -67,7 +67,7 @@ jobs:
       - id: archive
         shell: bash
         run: |
-          out="soksak-sidecar-terminal-kitty-0.0.2-${{ matrix.target }}.tar.gz"
+          out="soksak-sidecar-terminal-kitty-0.0.3-${{ matrix.target }}.tar.gz"
           ./scripts/package-release.sh dist "${{ matrix.target }}" "$out"
           if command -v sha256sum >/dev/null 2>&1; then sha256sum "$out" | tee "$out.sha256"; else shasum -a 256 "$out" | tee "$out.sha256"; fi
           echo "asset=$out" >> "$GITHUB_OUTPUT"
@@ -100,7 +100,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: soksak-ai/soksak-spec
-          ref: 4adfa80cb0596a9380723fe1cae62b9a14ed6e28
+          ref: ef67d91f635524a667b8c78052358173d55bf019
           path: soksak-sidecars/soksak-sidecar-terminal-kitty/.dependency/soksak-spec
       - name: Build the exact public validator without links
         working-directory: soksak-sidecars/soksak-sidecar-terminal-kitty/.dependency/soksak-spec
@@ -108,7 +108,7 @@ jobs:
           pnpm --config.node-linker=hoisted --config.symlink=false install --frozen-lockfile
           pnpm build
           test -z "$(find . -type l -print -quit)"
-      - run: node .dependency/soksak-spec/packages/plugin-spec/release-template/sidecar/build-release.mjs --commit "${{ github.sha }}" --tag v0.0.2 --artifacts dist --out dist-release
+      - run: node .dependency/soksak-spec/packages/plugin-spec/release-template/sidecar/build-release.mjs --commit "${{ github.sha }}" --tag v0.0.3 --artifacts dist --out dist-release
       - run: node .dependency/soksak-spec/packages/plugin-spec/release-template/sidecar/validate-with-spec.mjs --spec-root .dependency/soksak-spec --release-dir dist-release
       - id: release-token
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1
