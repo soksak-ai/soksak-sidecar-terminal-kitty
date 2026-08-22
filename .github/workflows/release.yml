@@ -27,7 +27,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: soksak-ai/soksak-kit-sidecar-terminal
-          ref: 876e74628167f8e0ea6f2939a9ec6d13a300418f
+          ref: 2b7d7ee5855a2dbef4507da44c347ad4fd74e552
           path: soksak-kits/soksak-kit-sidecar-terminal
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -56,7 +56,9 @@ jobs:
             python3-dev uuid-dev wayland-protocols
       - name: Install macOS SDK requirements
         if: runner.os == 'macOS'
-        run: brew install harfbuzz little-cms2 libpng openssl@3 pkgconf python simde xxhash zlib
+        run: |
+          if brew tap | grep -Fxq aws/tap; then brew untap aws/tap; fi
+          brew install harfbuzz little-cms2 libpng openssl@3 pkgconf python simde xxhash zlib
       - name: Build Kitty SDK
         working-directory: externals/kitty
         run: python3 setup.py kitty-provider-sdk
@@ -67,7 +69,10 @@ jobs:
       - id: archive
         shell: bash
         run: |
-          out="soksak-sidecar-terminal-kitty-0.0.4-${{ matrix.target }}.tar.gz"
+          version="$(sed -n 's/^version = \"\(.*\)\"/\1/p' Cargo.toml | head -1)"
+          manifest_version="$(sed -n 's/.*\"version\": \"\([^\"]*\)\".*/\1/p' sidecar.json | head -1)"
+          test "$version" = "$manifest_version"
+          out="soksak-sidecar-terminal-kitty-$version-${{ matrix.target }}.tar.gz"
           ./scripts/package-release.sh dist "${{ matrix.target }}" "$out"
           if command -v sha256sum >/dev/null 2>&1; then sha256sum "$out" | tee "$out.sha256"; else shasum -a 256 "$out" | tee "$out.sha256"; fi
           echo "asset=$out" >> "$GITHUB_OUTPUT"
@@ -108,7 +113,9 @@ jobs:
           pnpm --config.node-linker=hoisted --config.symlink=false install --frozen-lockfile
           pnpm build
           test -z "$(find . -type l -print -quit)"
-      - run: node .dependency/soksak-spec/packages/plugin-spec/release-template/sidecar/build-release.mjs --commit "${{ github.sha }}" --tag v0.0.4 --artifacts dist --out dist-release
+      - run: |
+          version="$(sed -n 's/^version = \"\(.*\)\"/\1/p' Cargo.toml | head -1)"
+          node .dependency/soksak-spec/packages/plugin-spec/release-template/sidecar/build-release.mjs --commit "${{ github.sha }}" --tag "v$version" --artifacts dist --out dist-release
       - run: node .dependency/soksak-spec/packages/plugin-spec/release-template/sidecar/validate-with-spec.mjs --spec-root .dependency/soksak-spec --release-dir dist-release
       - id: release-token
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1
