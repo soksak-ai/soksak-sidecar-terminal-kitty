@@ -7,7 +7,7 @@ fn sidecar_manifest_declares_the_staged_process() {
     ).expect("parse sidecar.json");
     assert!(manifest.get("spec").is_none());
     assert_eq!(manifest["id"], "soksak-sidecar-terminal-kitty");
-    assert_eq!(manifest["version"], "0.0.3");
+    assert_eq!(manifest["version"], "0.0.4");
     assert_eq!(manifest["interface"]["version"], "0.0.1");
     let process = manifest["process"].as_str().expect("process path");
     assert_eq!(process, "dist/soksak-sidecar-terminal-kitty");

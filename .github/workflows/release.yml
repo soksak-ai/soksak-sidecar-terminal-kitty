@@ -27,7 +27,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: soksak-ai/soksak-kit-sidecar-terminal
-          ref: 5407f266e65ddfc26e43c0ca6690e57ba0b6ff6a
+          ref: 876e74628167f8e0ea6f2939a9ec6d13a300418f
           path: soksak-kits/soksak-kit-sidecar-terminal
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -67,7 +67,7 @@ jobs:
       - id: archive
         shell: bash
         run: |
-          out="soksak-sidecar-terminal-kitty-0.0.3-${{ matrix.target }}.tar.gz"
+          out="soksak-sidecar-terminal-kitty-0.0.4-${{ matrix.target }}.tar.gz"
           ./scripts/package-release.sh dist "${{ matrix.target }}" "$out"
           if command -v sha256sum >/dev/null 2>&1; then sha256sum "$out" | tee "$out.sha256"; else shasum -a 256 "$out" | tee "$out.sha256"; fi
           echo "asset=$out" >> "$GITHUB_OUTPUT"
@@ -108,7 +108,7 @@ jobs:
           pnpm --config.node-linker=hoisted --config.symlink=false install --frozen-lockfile
           pnpm build
           test -z "$(find . -type l -print -quit)"
-      - run: node .dependency/soksak-spec/packages/plugin-spec/release-template/sidecar/build-release.mjs --commit "${{ github.sha }}" --tag v0.0.3 --artifacts dist --out dist-release
+      - run: node .dependency/soksak-spec/packages/plugin-spec/release-template/sidecar/build-release.mjs --commit "${{ github.sha }}" --tag v0.0.4 --artifacts dist --out dist-release
       - run: node .dependency/soksak-spec/packages/plugin-spec/release-template/sidecar/validate-with-spec.mjs --spec-root .dependency/soksak-spec --release-dir dist-release
       - id: release-token
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1
