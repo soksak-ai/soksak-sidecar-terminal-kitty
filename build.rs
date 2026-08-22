@@ -3,7 +3,7 @@ use std::path::PathBuf;
 fn main() {
     let target_os = std::env::var("CARGO_CFG_TARGET_OS").expect("Cargo target OS");
     if target_os != "macos" && target_os != "linux" {
-        panic!("Kitty provider 0.0.1 supports macOS and Linux; target OS is {target_os}");
+        panic!("Kitty provider 0.0.2 supports macOS and Linux; target OS is {target_os}");
     }
     let sdk = std::env::var("SOKSAK_KITTY_PROVIDER_SDK")
         .ok()

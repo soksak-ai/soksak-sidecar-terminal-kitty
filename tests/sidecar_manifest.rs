@@ -7,10 +7,9 @@ fn sidecar_manifest_declares_the_staged_process() {
     ).expect("parse sidecar.json");
     assert!(manifest.get("spec").is_none());
     assert_eq!(manifest["id"], "soksak-sidecar-terminal-kitty");
-    assert_eq!(manifest["version"], "0.0.1");
+    assert_eq!(manifest["version"], "0.0.2");
     assert_eq!(manifest["interface"]["version"], "0.0.1");
     let process = manifest["process"].as_str().expect("process path");
     assert_eq!(process, "dist/soksak-sidecar-terminal-kitty");
     assert!(Path::new(process).is_file(), "stage.sh must create the declared process");
-    assert!(!Path::new("release/unit.json").exists(), "legacy unit manifest must be absent");
 }

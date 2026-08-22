@@ -1,9 +1,9 @@
-# soksak-sidecar-terminal-kitty 0.0.1
+# soksak-sidecar-terminal-kitty 0.0.2
 
 Kitty terminal-state provider for `soksak-spec-sidecar-terminal` 0.0.1. Kitty's production Screen
 and VT parser are delivered through the pinned provider SDK; Rust consumes only the SDK's opaque C
 handle and flat snapshot/cell structs. Recovery ordering, alt-screen preservation and restore
-serialization are owned by `soksak-kit-sidecar-terminal` 0.0.1.
+serialization are owned by `soksak-kit-sidecar-terminal` 0.0.2.
 
 Build and declare the SDK explicitly:
 

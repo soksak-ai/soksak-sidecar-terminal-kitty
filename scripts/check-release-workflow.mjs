@@ -10,9 +10,9 @@ const targets = JSON.parse(fs.readFileSync(path.join(ROOT, "release/targets.json
 const requireText = (value, label) => { if (!workflow.includes(value)) throw new Error(`release workflow is missing ${label}: ${value}`); };
 const cargo = fs.readFileSync(path.join(ROOT, "Cargo.toml"), "utf8");
 if (/\bpath\s*=\s*"\.\.\//.test(cargo)) throw new Error("Cargo dependencies must not require sibling checkouts");
-requireText("ref: 4af58a772a141b9e4d4258ae5f21a140aa162d82", "terminal sidecar kit commit");
+requireText("ref: 5407f266e65ddfc26e43c0ca6690e57ba0b6ff6a", "terminal sidecar kit commit");
 requireText("ref: cab0691a1a01fca7436ac29f6cc2850245788ea6", "terminal contract commit");
-requireText("ref: 50993e5287a29e0d0a2f0cac096fa5ef12d06ea4", "platform spec commit");
+requireText("ref: 4adfa80cb0596a9380723fe1cae62b9a14ed6e28", "platform spec commit");
 requireText("ref: c222bdf6934b59f4eedea1254850479bd56cb62a", "Kitty SDK commit");
 requireText(`path: ${ownerPath}`, "owner checkout path");
 requireText(`working-directory: ${ownerPath}`, "owner working directory");
@@ -30,5 +30,5 @@ requireText("release-template/publish-canonical-release.mjs", "canonical immutab
 requireText("SOKSAK_RELEASE_TOKEN: ${{ steps.release-token.outputs.token }}", "canonical publisher token");
 for (const duplicate of ["build-release.mjs", "release-contract.mjs", "validate-with-spec.mjs"]) if (fs.existsSync(path.join(ROOT, "scripts", duplicate))) throw new Error(`local spec copy is forbidden: scripts/${duplicate}`);
 if (fs.existsSync(path.join(ROOT, "validation/spec-validator.json"))) throw new Error("local spec pin copy is forbidden");
-if (workflow.includes("windows") || workflow.includes("pc-windows")) throw new Error("Kitty 0.0.1 release must not declare Windows");
+if (workflow.includes("windows") || workflow.includes("pc-windows")) throw new Error("Kitty 0.0.2 release must not declare Windows");
 console.log("release workflow contract: passed");
