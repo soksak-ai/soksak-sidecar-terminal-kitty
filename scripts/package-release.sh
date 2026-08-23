@@ -15,9 +15,9 @@ find "$package" -type f \( -name '*.pyc' -o -name '*.pyo' \) -exec false {} +
 test -f "$package/dist/kitty-provider/lib/libkitty_provider.a"
 test -f "$package/dist/kitty-provider/python/kitty/fast_data_types.so"
 test -d "$package/dist/kitty-provider/runtime/lib"
-tar -czf "$out" -C "$package" .
-tar -tzf "$out" | grep -Fx './sidecar.json' >/dev/null
-tar -tzf "$out" | grep -Fx './LICENSE' >/dev/null
-tar -tzf "$out" | grep -Fx './THIRD-PARTY-NOTICES' >/dev/null
-tar -tzf "$out" | grep -Fx './dist/soksak-sidecar-terminal-kitty' >/dev/null
+tar -czf "$out" -C "$package" LICENSE THIRD-PARTY-NOTICES sidecar.json dist
+tar -tzf "$out" | grep -Fx 'sidecar.json' >/dev/null
+tar -tzf "$out" | grep -Fx 'LICENSE' >/dev/null
+tar -tzf "$out" | grep -Fx 'THIRD-PARTY-NOTICES' >/dev/null
+tar -tzf "$out" | grep -Fx 'dist/soksak-sidecar-terminal-kitty' >/dev/null
 printf 'packaged %s for %s\n' "$out" "$target"
