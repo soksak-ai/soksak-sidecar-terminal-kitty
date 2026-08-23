@@ -1,4 +1,4 @@
-# soksak-sidecar-terminal-kitty 0.0.7
+# soksak-sidecar-terminal-kitty 0.0.8
 
 Kitty terminal-state provider for `soksak-spec-sidecar-terminal` 0.0.1. Kitty's production Screen
 and VT parser are delivered through the pinned provider SDK; Rust consumes only the SDK's opaque C
