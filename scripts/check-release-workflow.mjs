@@ -11,9 +11,14 @@ const requireText = (value, label) => { if (!workflow.includes(value)) throw new
 const cargo = fs.readFileSync(path.join(ROOT, "Cargo.toml"), "utf8");
 if (!/^edition = "2024"$/m.test(cargo)) throw new Error("Rust packages must use edition 2024");
 if (/\bpath\s*=\s*"\.\.\//.test(cargo)) throw new Error("Cargo dependencies must not require sibling checkouts");
-requireText("ref: 2b7d7ee5855a2dbef4507da44c347ad4fd74e552", "terminal sidecar kit commit");
-requireText("ref: cab0691a1a01fca7436ac29f6cc2850245788ea6", "terminal contract commit");
-requireText("ref: 418d6064fcdc5885be1ff73fd898fd7a0f778a0f", "platform spec commit");
+if (!cargo.includes('rev = "2b7d7ee5855a2dbef4507da44c347ad4fd74e552"')) throw new Error("Cargo must pin the terminal sidecar kit commit");
+if (!cargo.includes('rev = "cab0691a1a01fca7436ac29f6cc2850245788ea6"')) throw new Error("Cargo must pin the terminal contract commit");
+requireText("ref: 4c83e41a0aa168bc4c2e11100aba242277c731b6", "platform spec commit");
+requireText("package_json_file:", "validator-owned pnpm version");
+requireText("node-version-file:", "validator-owned Node version");
+if (/path:\s+soksak-(?:kits|contracts)\//.test(workflow)) throw new Error("Cargo dependencies must not be staged as sibling repositories");
+if (/node-version:\s*["']?\d/.test(workflow)) throw new Error("release workflow must not hardcode Node");
+if (/^\s+version:\s*["']?\d/m.test(workflow) || workflow.includes('with: { version: "')) throw new Error("release workflow must not hardcode pnpm");
 requireText("ref: c222bdf6934b59f4eedea1254850479bd56cb62a", "Kitty SDK commit");
 requireText(`path: ${ownerPath}`, "owner checkout path");
 requireText(`working-directory: ${ownerPath}`, "owner working directory");
