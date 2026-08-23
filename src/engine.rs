@@ -1,4 +1,4 @@
-use std::ffi::{c_char, c_int, c_void, CString};
+use std::ffi::{CString, c_char, c_int, c_void};
 use std::ptr::NonNull;
 use std::sync::OnceLock;
 
@@ -66,8 +66,13 @@ impl Engine {
     pub fn new(columns: u16, rows: u16) -> Self {
         RUNTIME.get_or_init(|| {
             let sdk = std::env::var("SOKSAK_KITTY_PROVIDER_SDK").unwrap_or_else(|_| {
-                std::env::current_exe().expect("current executable").parent()
-                    .expect("sidecar executable directory").join("kitty-provider").to_string_lossy().into_owned()
+                std::env::current_exe()
+                    .expect("current executable")
+                    .parent()
+                    .expect("sidecar executable directory")
+                    .join("kitty-provider")
+                    .to_string_lossy()
+                    .into_owned()
             });
             let python =
                 CString::new(format!("{sdk}/python")).expect("Kitty SDK path contains NUL");

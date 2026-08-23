@@ -7,7 +7,9 @@ fn stage_uses_the_declared_cargo_target_directory() {
 
     assert!(script.contains("release_dir=release"));
     assert!(script.contains("release_dir=\"$target/release\""));
-    assert!(script.contains("${CARGO_TARGET_DIR:-target}/$release_dir/soksak-sidecar-terminal-kitty"));
+    assert!(
+        script.contains("${CARGO_TARGET_DIR:-target}/$release_dir/soksak-sidecar-terminal-kitty")
+    );
     assert!(script.contains("-name '*.pyc' -o -name '*.pyo'"));
 }
 

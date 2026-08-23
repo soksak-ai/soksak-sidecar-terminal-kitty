@@ -1,7 +1,7 @@
 use soksak_contract_terminal as contract;
 use soksak_contract_terminal::MirrorUnderTest;
-use soksak_sidecar_terminal_kitty::engine::{ColorSnap, GridCell, ModeSnap};
 use soksak_sidecar_terminal_kitty::Mirror;
+use soksak_sidecar_terminal_kitty::engine::{ColorSnap, GridCell, ModeSnap};
 
 pub struct SidecarMirror(Mirror);
 

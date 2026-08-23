@@ -1,7 +1,7 @@
 [package]
 name = "soksak-sidecar-terminal-kitty"
 version = "0.0.5"
-edition = "2021"
+edition = "2024"
 publish = false
 license = "GPL-3.0-only"
 description = "Kitty terminal-state provider for the Soksak terminal recovery contract."
