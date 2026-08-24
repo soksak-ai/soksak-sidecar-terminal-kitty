@@ -1,0 +1,35 @@
+{
+  "schema": "soksak-build-dependencies-v1",
+  "dependencies": [
+    {
+      "id": "kitty-provider-sdk",
+      "repository": "https://github.com/kovidgoyal/kitty.git",
+      "commit": "c222bdf6934b59f4eedea1254850479bd56cb62a",
+      "tools": {
+        "python": "3.14.2"
+      },
+      "targets": {
+        "aarch64-apple-darwin": {
+          "outputs": [
+            { "path": "targets/aarch64-apple-darwin/kitty-provider", "type": "tree" }
+          ]
+        },
+        "aarch64-unknown-linux-gnu": {
+          "outputs": [
+            { "path": "targets/aarch64-unknown-linux-gnu/kitty-provider", "type": "tree" }
+          ]
+        },
+        "x86_64-apple-darwin": {
+          "outputs": [
+            { "path": "targets/x86_64-apple-darwin/kitty-provider", "type": "tree" }
+          ]
+        },
+        "x86_64-unknown-linux-gnu": {
+          "outputs": [
+            { "path": "targets/x86_64-unknown-linux-gnu/kitty-provider", "type": "tree" }
+          ]
+        }
+      }
+    }
+  ]
+}
