@@ -1,11 +1,23 @@
 name: release
+
 on:
   workflow_dispatch:
+    inputs:
+      spec_url:
+        description: Exact immutable soksak-spec package URL from the release train
+        required: true
+        type: string
+      spec_sha256:
+        description: SHA-256 of the exact soksak-spec package
+        required: true
+        type: string
+
 concurrency:
   group: release-${{ github.repository }}
   cancel-in-progress: false
 permissions:
   contents: read
+
 jobs:
   build:
     if: github.ref == 'refs/heads/main'
@@ -20,54 +32,77 @@ jobs:
     runs-on: ${{ matrix.runner }}
     defaults:
       run:
+        shell: bash
         working-directory: soksak-sidecars/soksak-sidecar-terminal-kitty
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with: { path: soksak-sidecars/soksak-sidecar-terminal-kitty }
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          repository: min-median-max/kitty
-          ref: c222bdf6934b59f4eedea1254850479bd56cb62a
-          path: externals/kitty
+          path: soksak-sidecars/soksak-sidecar-terminal-kitty
+          persist-credentials: false
+      - name: Inject the exact spec validation tool
+        run: |
+          case "${{ inputs.spec_url }}" in
+            https://github.com/soksak-ai/soksak-spec/releases/download/v*/soksak-ai-plugin-spec-*.tgz) ;;
+            *) echo "spec_url is not an immutable soksak-spec release asset" >&2; exit 1 ;;
+          esac
+          digest="${{ inputs.spec_sha256 }}"
+          test "${#digest}" -eq 64
+          case "$digest" in *[!a-f0-9]*) echo "spec_sha256 is invalid" >&2; exit 1 ;; esac
+          mkdir -p .dependency/spec-package
+          curl -fsSL "${{ inputs.spec_url }}" -o .dependency/soksak-spec.tgz
+          actual="$(if command -v sha256sum >/dev/null 2>&1; then sha256sum .dependency/soksak-spec.tgz; else shasum -a 256 .dependency/soksak-spec.tgz; fi | awk '{print $1}')"
+          test "$actual" = "$digest"
+          tar -xzf .dependency/soksak-spec.tgz -C .dependency/spec-package --strip-components=1
+          test -z "$(find .dependency/spec-package -type l -print -quit)"
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: soksak-sidecars/soksak-sidecar-terminal-kitty/.dependency/spec-package/package.json
+      - run: |
+          npm install --global --ignore-scripts .dependency/soksak-spec.tgz
+          soksak-validate --help >/dev/null
+      - id: build-dependency
+        run: echo "python=$(node -e 'const v=require("./build-dependencies.json");process.stdout.write(v.dependencies[0].tools.python)')" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+        with:
+          python-version: ${{ steps.build-dependency.outputs.python }}
       - id: rust-toolchain
-        shell: bash
         run: echo "channel=$(sed -n 's/^channel = \"\(.*\)\"/\1/p' rust-toolchain.toml)" >> "$GITHUB_OUTPUT"
       - uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30
         with:
           toolchain: ${{ steps.rust-toolchain.outputs.channel }}
           targets: ${{ matrix.target }}
-      - name: Install Linux SDK requirements
+      - name: Inject Linux SDK libraries
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install --no-install-recommends -y \
             build-essential libcanberra-dev libcairo2-dev libdbus-1-dev libfontconfig-dev \
-            libgl1-mesa-dev libharfbuzz-dev liblcms2-dev libpng-dev libpython3-dev \
-            libsimde-dev libsystemd-dev libwayland-dev libx11-xcb-dev libxcb-xkb-dev \
-            libxcursor-dev libxi-dev libxinerama-dev libxkbcommon-dev \
-            libxkbcommon-x11-dev libxrandr-dev libxxhash-dev patchelf pkg-config \
-            python3-dev uuid-dev wayland-protocols
-      - name: Install macOS SDK requirements
+            libgl1-mesa-dev libharfbuzz-dev liblcms2-dev libpng-dev libsimde-dev \
+            libsystemd-dev libwayland-dev libx11-xcb-dev libxcb-xkb-dev libxcursor-dev \
+            libxi-dev libxinerama-dev libxkbcommon-dev libxkbcommon-x11-dev libxrandr-dev \
+            libxxhash-dev patchelf pkg-config uuid-dev wayland-protocols
+      - name: Inject macOS SDK libraries
         if: runner.os == 'macOS'
+        run: brew install harfbuzz little-cms2 libpng openssl@3 pkgconf simde xxhash zlib
+      - id: identity
         run: |
-          if brew tap | grep -Fxq aws/tap; then brew untap aws/tap; fi
-          brew install harfbuzz little-cms2 libpng openssl@3 pkgconf python simde xxhash zlib
-      - name: Build Kitty SDK
-        working-directory: externals/kitty
-        run: python3 setup.py kitty-provider-sdk
-      - name: Stage sidecar
-        env:
-          SOKSAK_KITTY_PROVIDER_SDK: ${{ github.workspace }}/externals/kitty/build/kitty-provider
-        run: ./stage.sh dist "${{ matrix.target }}"
+          version="$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)"
+          case "$version" in ''|*[!0-9.]*) echo "invalid version: $version" >&2; exit 1 ;; esac
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - run: |
+          make verify TARGET="${{ matrix.target }}"
+          make stage TARGET="${{ matrix.target }}" OUT=dist
       - id: archive
-        shell: bash
         run: |
-          version="$(sed -n 's/^version = \"\(.*\)\"/\1/p' Cargo.toml | head -1)"
-          manifest_version="$(sed -n 's/.*\"version\": \"\([^\"]*\)\".*/\1/p' sidecar.json | head -1)"
-          test "$version" = "$manifest_version"
+          version="${{ steps.identity.outputs.version }}"
           out="soksak-sidecar-terminal-kitty-$version-${{ matrix.target }}.tar.gz"
-          ./scripts/package-release.sh dist "${{ matrix.target }}" "$out"
-          if command -v sha256sum >/dev/null 2>&1; then sha256sum "$out" | tee "$out.sha256"; else shasum -a 256 "$out" | tee "$out.sha256"; fi
+          mkdir -p package/dist
+          cp dist/sidecar.json package/sidecar.json
+          cp LICENSE THIRD-PARTY-NOTICES package/
+          cp dist/soksak-sidecar-terminal-kitty package/dist/
+          cp -R dist/kitty-provider package/dist/kitty-provider
+          cp "target/build-dependencies/kitty-provider-sdk/receipts/${{ matrix.target }}.json" package/build-dependency-receipt.json
+          node .dependency/spec-package/release-template/sidecar/pack-target.mjs --source package --target "${{ matrix.target }}" --out "$out"
           echo "asset=$out" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
@@ -77,6 +112,7 @@ jobs:
             soksak-sidecars/soksak-sidecar-terminal-kitty/${{ steps.archive.outputs.asset }}.sha256
           if-no-files-found: error
           compression-level: 0
+
   publish:
     needs: build
     runs-on: ubuntu-24.04
@@ -85,25 +121,37 @@ jobs:
         working-directory: soksak-sidecars/soksak-sidecar-terminal-kitty
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with: { path: soksak-sidecars/soksak-sidecar-terminal-kitty }
-      - name: Install the immutable public spec package
+        with:
+          path: soksak-sidecars/soksak-sidecar-terminal-kitty
+          persist-credentials: false
+      - name: Inject the exact spec validation tool
         run: |
+          case "${{ inputs.spec_url }}" in
+            https://github.com/soksak-ai/soksak-spec/releases/download/v*/soksak-ai-plugin-spec-*.tgz) ;;
+            *) echo "spec_url is not an immutable soksak-spec release asset" >&2; exit 1 ;;
+          esac
+          digest="${{ inputs.spec_sha256 }}"
+          test "${#digest}" -eq 64
+          case "$digest" in *[!a-f0-9]*) echo "spec_sha256 is invalid" >&2; exit 1 ;; esac
           mkdir -p .dependency/spec-package
-          curl -fsSL https://github.com/soksak-ai/soksak-spec/releases/download/v0.0.27/soksak-ai-plugin-spec-0.0.27.tgz -o .dependency/soksak-spec.tgz
-          echo "a3991634079056d0066de9ffc1af1bac6d65ecf1eb1c72e3619f8fb136d4c513  .dependency/soksak-spec.tgz" | sha256sum -c -
+          curl -fsSL "${{ inputs.spec_url }}" -o .dependency/soksak-spec.tgz
+          test "$(sha256sum .dependency/soksak-spec.tgz | awk '{print $1}')" = "$digest"
           tar -xzf .dependency/soksak-spec.tgz -C .dependency/spec-package --strip-components=1
           test -z "$(find .dependency/spec-package -type l -print -quit)"
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version-file: soksak-sidecars/soksak-sidecar-terminal-kitty/.dependency/spec-package/package.json
+      - id: identity
+        run: |
+          version="$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)"
+          case "$version" in ''|*[!0-9.]*) echo "invalid version: $version" >&2; exit 1 ;; esac
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
           pattern: dist-*
           path: soksak-sidecars/soksak-sidecar-terminal-kitty/dist
           merge-multiple: true
-      - run: |
-          version="$(sed -n 's/^version = \"\(.*\)\"/\1/p' Cargo.toml | head -1)"
-          node .dependency/spec-package/release-template/sidecar/build-release.mjs --commit "${{ github.sha }}" --tag "v$version" --artifacts dist --out dist-release
+      - run: node .dependency/spec-package/release-template/sidecar/build-release.mjs --commit "${{ github.sha }}" --tag "${{ steps.identity.outputs.tag }}" --artifacts dist --out dist-release
       - run: node .dependency/spec-package/release-template/sidecar/validate-with-spec.mjs --spec-package .dependency/spec-package --release-dir dist-release
       - id: release-token
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1
@@ -112,8 +160,7 @@ jobs:
           private-key: ${{ secrets.SOKSAK_RELEASE_PRIVATE_KEY }}
           permission-administration: read
           permission-contents: write
-      - name: Collect the canonical public asset set
-        run: |
+      - run: |
           mkdir publish-assets
           find dist -maxdepth 1 -type f -name '*.tar.gz' -exec cp {} publish-assets/ \;
           cp dist-release/*.json publish-assets/
