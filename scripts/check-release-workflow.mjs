@@ -8,6 +8,7 @@ const workflow = read(".github/workflows/release.yml");
 const manifest = JSON.parse(read("sidecar.json"));
 const dependency = JSON.parse(read("build-dependencies.json")).dependencies[0];
 const targets = JSON.parse(read("release/targets.json"));
+const stage = read("scripts/stage-built.sh");
 const ownerPath = `soksak-sidecars/${manifest.id}`;
 const requireText = (value, label) => { if (!workflow.includes(value)) throw new Error(`release workflow is missing ${label}: ${value}`); };
 for (const value of [dependency.repository, dependency.commit, dependency.tools.python]) {
@@ -30,4 +31,5 @@ for (const obsolete of ["repository: min-median-max", "stage.sh", "SOKSAK_KITTY_
   if (workflow.includes(obsolete)) throw new Error(`workflow retains obsolete behavior: ${obsolete}`);
 }
 if (workflow.includes("windows") || workflow.includes("pc-windows")) throw new Error("Kitty release must not declare Windows");
+if (!stage.includes("absolute candidate output")) throw new Error("stage-built does not permit isolated absolute output");
 console.log("release workflow contract: passed");
