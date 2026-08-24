@@ -65,15 +65,13 @@ unsafe impl Send for Engine {}
 impl Engine {
     pub fn new(columns: u16, rows: u16) -> Self {
         RUNTIME.get_or_init(|| {
-            let sdk = std::env::var("SOKSAK_KITTY_PROVIDER_SDK").unwrap_or_else(|_| {
-                std::env::current_exe()
-                    .expect("current executable")
-                    .parent()
-                    .expect("sidecar executable directory")
-                    .join("kitty-provider")
-                    .to_string_lossy()
-                    .into_owned()
-            });
+            let sdk = std::env::current_exe()
+                .expect("current executable")
+                .parent()
+                .expect("sidecar executable directory")
+                .join("kitty-provider")
+                .to_string_lossy()
+                .into_owned();
             let python =
                 CString::new(format!("{sdk}/python")).expect("Kitty SDK path contains NUL");
             assert_eq!(

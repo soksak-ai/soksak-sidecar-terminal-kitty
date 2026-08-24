@@ -9,6 +9,7 @@ const manifest = JSON.parse(read("build-dependencies.json"));
 const makefile = read("Makefile");
 const workflow = read(".github/workflows/release.yml");
 const build = read("build.rs");
+const engine = read("src/engine.rs");
 const prepare = read("scripts/prepare-kitty-sdk.sh");
 const dependency = manifest.dependencies?.[0];
 const keys = (value) => Object.keys(value).sort().join("\n");
@@ -40,6 +41,6 @@ for (const target of ["preflight", "prepare", "build", "verify", "stage"]) {
 if (!makefile.includes("TARGET") || !makefile.includes("SOKSAK_BUILD_DEPENDENCY_ROOT=")) throw new Error("Makefile does not own the addressed build command");
 if (!prepare.includes("soksak-validate build-receipt-create")) throw new Error("Kitty prepare does not use canonical receipt creation");
 if (!workflow.includes('make stage TARGET="${{ matrix.target }}" OUT=dist')) throw new Error("workflow does not call the owner Make target");
-if (build.includes("SOKSAK_KITTY_PROVIDER_SDK")) throw new Error("build.rs retains the raw Kitty SDK input");
+if (build.includes("SOKSAK_KITTY_PROVIDER_SDK") || engine.includes("SOKSAK_KITTY_PROVIDER_SDK")) throw new Error("runtime retains the raw Kitty SDK input");
 if (!build.includes("SOKSAK_BUILD_DEPENDENCY_ROOT")) throw new Error("build.rs does not consume the Make-owned root");
 console.log("build configuration contract: passed");
