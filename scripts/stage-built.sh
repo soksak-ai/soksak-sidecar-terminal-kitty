@@ -4,12 +4,15 @@ set -eu
 [ "$#" -eq 2 ] && [ -n "$1" ] && [ -n "$2" ] || { echo 'usage: stage-built.sh <out> <target>' >&2; exit 2; }
 out=$1
 target=$2
-case "$out" in /*|*..*) echo 'stage output must be repository-relative' >&2; exit 2 ;; esac
+repository=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+# An absolute candidate output is allowed only outside the source repository.
+case "$out" in ''|/|.|*..*|"$repository"|"$repository"/*) echo 'stage output is unsafe or inside the source repository' >&2; exit 2 ;; esac
 name=soksak-sidecar-terminal-kitty
 binary=target/$target/release/$name
 sdk=${SOKSAK_BUILD_DEPENDENCY_ROOT:?Make supplies SOKSAK_BUILD_DEPENDENCY_ROOT}/targets/$target/kitty-provider
 [ -f "$binary" ] && [ -d "$sdk" ] || { echo "built Kitty binary or SDK is missing" >&2; exit 1; }
 mkdir -p "$out"
+[ ! -L "$out" ] || { echo 'stage output must not be a symbolic link' >&2; exit 2; }
 if [ -e "$out/$name" ]; then
   cmp -s "$binary" "$out/$name" || { echo "staged Kitty binary conflicts with current build" >&2; exit 1; }
 else
