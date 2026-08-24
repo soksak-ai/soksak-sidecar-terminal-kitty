@@ -1,0 +1,45 @@
+#!/usr/bin/env node
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const read = (name) => fs.readFileSync(path.join(root, name), "utf8");
+const manifest = JSON.parse(read("build-dependencies.json"));
+const makefile = read("Makefile");
+const workflow = read(".github/workflows/release.yml");
+const build = read("build.rs");
+const prepare = read("scripts/prepare-kitty-sdk.sh");
+const dependency = manifest.dependencies?.[0];
+const keys = (value) => Object.keys(value).sort().join("\n");
+if (manifest.schema !== "soksak-build-dependencies-v1" || manifest.dependencies.length !== 1 ||
+    keys(dependency) !== ["commit", "id", "repository", "targets", "tools"].join("\n")) {
+  throw new Error("Kitty build dependency document is not flat and exact");
+}
+if (dependency.id !== "kitty-provider-sdk" || !/^[a-f0-9]{40}$/.test(dependency.commit) ||
+    !/^https:\/\/[^/]+\/(?:[^/]+\/)+[^/]+[.]git$/.test(dependency.repository)) {
+  throw new Error("Kitty build dependency identity is invalid");
+}
+if (keys(dependency.tools) !== "python" || !/^\d+[.]\d+[.]\d+$/.test(dependency.tools.python)) {
+  throw new Error("Kitty Python build tool is not exact");
+}
+const targets = JSON.parse(read("release/targets.json")).map(({ target }) => target).sort();
+if (JSON.stringify(targets) !== JSON.stringify(Object.keys(dependency.targets).sort())) throw new Error("Kitty target sets differ");
+for (const target of targets) {
+  const expected = [{ path: `targets/${target}/kitty-provider`, type: "tree" }];
+  if (JSON.stringify(dependency.targets[target].outputs) !== JSON.stringify(expected)) throw new Error(`Kitty output differs for ${target}`);
+}
+for (const [name, source] of [["Makefile", makefile], ["workflow", workflow], ["build.rs", build], ["README", read("README.md")]]) {
+  for (const duplicated of [dependency.repository, dependency.commit, dependency.tools.python]) {
+    if (source.includes(duplicated)) throw new Error(`${name} duplicates build-dependencies.json metadata`);
+  }
+}
+for (const target of ["preflight", "prepare", "build", "verify", "stage"]) {
+  if (!new RegExp(`^${target}:`, "m").test(makefile)) throw new Error(`Makefile target is missing: ${target}`);
+}
+if (!makefile.includes("TARGET") || !makefile.includes("SOKSAK_BUILD_DEPENDENCY_ROOT=")) throw new Error("Makefile does not own the addressed build command");
+if (!prepare.includes("soksak-validate build-receipt-create")) throw new Error("Kitty prepare does not use canonical receipt creation");
+if (!workflow.includes('make stage TARGET="${{ matrix.target }}" OUT=dist')) throw new Error("workflow does not call the owner Make target");
+if (build.includes("SOKSAK_KITTY_PROVIDER_SDK")) throw new Error("build.rs retains the raw Kitty SDK input");
+if (!build.includes("SOKSAK_BUILD_DEPENDENCY_ROOT")) throw new Error("build.rs does not consume the Make-owned root");
+console.log("build configuration contract: passed");
