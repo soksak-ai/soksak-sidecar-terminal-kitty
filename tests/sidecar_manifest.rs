@@ -11,8 +11,12 @@ fn sidecar_manifest_declares_the_staged_process() {
     assert_eq!(manifest["interface"]["version"], "0.0.1");
     let process = manifest["process"].as_str().expect("process path");
     assert_eq!(process, "dist/soksak-sidecar-terminal-kitty");
+    let stage = std::env::var("SOKSAK_STAGE_OUT").expect("Make must declare the stage output");
+    let stage = Path::new(&stage);
+    assert!(stage.is_absolute(), "stage output must be absolute");
+    let relative = process.strip_prefix("dist/").expect("process must be inside dist");
     assert!(
-        Path::new(process).is_file(),
-        "stage.sh must create the declared process"
+        stage.join(relative).is_file(),
+        "stage target must contain the declared process"
     );
 }

@@ -1,8 +1,10 @@
 #!/bin/sh
 set -eu
 
-[ "$#" -eq 1 ] && [ -n "$1" ] || { echo 'usage: gate.sh <target>' >&2; exit 2; }
+[ "$#" -eq 2 ] && [ -n "$1" ] && [ -n "$2" ] || { echo 'usage: gate.sh <target> <stage-out>' >&2; exit 2; }
 target=$1
+case "$2" in /*) stage_out=$2 ;; *) stage_out=$PWD/$2 ;; esac
+[ -d "$stage_out" ] || { echo "stage output is missing: $stage_out" >&2; exit 1; }
 sdk=${SOKSAK_BUILD_DEPENDENCY_ROOT:?Make supplies SOKSAK_BUILD_DEPENDENCY_ROOT}/targets/$target/kitty-provider
 [ -d "$sdk/runtime/lib" ] || { echo "Kitty SDK runtime is missing: $sdk/runtime/lib" >&2; exit 1; }
 cargo test --locked --release --target "$target" --no-run
@@ -19,4 +21,4 @@ else
   mv "$test_sdk.next.$$" "$test_sdk"
   chmod 0555 "$test_sdk"
 fi
-cargo test --locked --release --target "$target"
+SOKSAK_STAGE_OUT="$stage_out" cargo test --locked --release --target "$target"
