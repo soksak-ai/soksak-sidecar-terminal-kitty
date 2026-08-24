@@ -5,14 +5,16 @@ and VT parser are delivered through the pinned provider SDK; Rust consumes only 
 handle and flat snapshot/cell structs. Recovery ordering, alt-screen preservation and restore
 serialization are owned by `soksak-kit-sidecar-terminal` 0.0.2.
 
-Build and declare the SDK explicitly:
+`build-dependencies.json` owns the exact Kitty source, Python tool, target set and SDK tree.
+The Make command graph consumes that declaration and writes a canonical tree receipt:
 
 ```sh
-cd /path/to/kitty
-CC=/usr/bin/clang CXX=/usr/bin/clang++ python3 setup.py kitty-provider-sdk
-SOKSAK_KITTY_PROVIDER_SDK=/path/to/kitty/build/kitty-provider cargo test
+make prepare TARGET=aarch64-apple-darwin
+make build TARGET=aarch64-apple-darwin
+make verify TARGET=aarch64-apple-darwin
+make stage TARGET=aarch64-apple-darwin OUT=dist
 ```
 
-The development SDK links the exact Python runtime recorded in `python-config.json`. Release
-packaging must bundle that runtime and rewrite native install names; a Homebrew path is not an
-acceptable release dependency.
+The SDK tree bundles the exact Python runtime recorded in `python-config.json`. `build.rs` accepts
+only the target receipt selected by Make and always links the bundled runtime; a workstation
+library path is not a release fallback.
