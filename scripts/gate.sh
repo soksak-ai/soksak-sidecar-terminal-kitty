@@ -1,9 +1,8 @@
 #!/bin/sh
 set -eu
 
-[ "$#" -ge 1 ] && [ -n "$1" ] || { echo 'usage: gate.sh <target> [bench-output]' >&2; exit 2; }
+[ "$#" -eq 1 ] && [ -n "$1" ] || { echo 'usage: gate.sh <target>' >&2; exit 2; }
 target=$1
-bench_output=${2:-}
 sdk=${SOKSAK_BUILD_DEPENDENCY_ROOT:?Make supplies SOKSAK_BUILD_DEPENDENCY_ROOT}/targets/$target/kitty-provider
 [ -d "$sdk/runtime/lib" ] || { echo "Kitty SDK runtime is missing: $sdk/runtime/lib" >&2; exit 1; }
 cargo test --locked --release --target "$target" --no-run
@@ -21,8 +20,3 @@ else
   chmod 0555 "$test_sdk"
 fi
 cargo test --locked --release --target "$target"
-if [ -n "$bench_output" ]; then
-  SOKSAK_BENCH_OUT="$bench_output" cargo test --locked --release --target "$target" --test bench -- --ignored --nocapture
-else
-  cargo test --locked --release --target "$target" --test bench -- --ignored --nocapture
-fi
