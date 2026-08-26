@@ -8,7 +8,7 @@ fn sidecar_manifest_declares_the_staged_process() {
     assert!(manifest.get("spec").is_none());
     assert_eq!(manifest["id"], "soksak-sidecar-terminal-kitty");
     assert_eq!(manifest["version"], env!("CARGO_PKG_VERSION"));
-    assert_eq!(manifest["interface"]["version"], "0.0.1");
+    assert_eq!(manifest["interface"]["version"], "0.0.2");
     let process = manifest["process"].as_str().expect("process path");
     assert_eq!(process, "dist/soksak-sidecar-terminal-kitty");
     let stage = std::env::var("SOKSAK_STAGE_OUT").expect("Make must declare the stage output");
