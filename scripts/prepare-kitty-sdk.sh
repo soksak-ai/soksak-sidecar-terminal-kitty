@@ -64,6 +64,21 @@ done
 cp -R "$sdk/." "$transaction/targets/$target/kitty-provider"
 find "$transaction/targets/$target/kitty-provider" -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete
 find "$transaction/targets/$target/kitty-provider" -name '.DS_Store' -type f -delete
+# What the embedded interpreter never reads at run time: the standard library's own test suite, the
+# headers and static archive that exist to build against it, the editor, and the installer. A unit
+# that shipped them would carry a third of its size for nothing.
+runtime_lib=$transaction/targets/$target/kitty-provider/runtime/lib
+if [ -d "$runtime_lib" ]; then
+  python_lib=$(find "$runtime_lib" -maxdepth 1 -type d -name 'python3.*' -print -quit)
+  if [ -n "$python_lib" ]; then
+    rm -rf -- "$python_lib/test" "$python_lib/idlelib" "$python_lib/ensurepip" "$python_lib/pydoc_data" \
+      "$python_lib/tkinter" "$python_lib/turtledemo" "$python_lib/lib2to3"
+    find "$python_lib" -maxdepth 1 -type d -name 'config-*' -exec rm -rf -- {} +
+    find "$python_lib" -type d -name 'tests' -prune -exec rm -rf -- {} +
+    find "$python_lib" -type f -name '*.a' -delete
+  fi
+  find "$runtime_lib" -maxdepth 1 -type f -name '*.a' -delete
+fi
 printf '%s\n' "$commit" > "$transaction/targets/$target/kitty-provider/source-commit.txt"
 printf '%s\n' "$python_version" > "$transaction/targets/$target/kitty-provider/python-version.txt"
 if find "$transaction/targets/$target/kitty-provider" -type l -print -quit | grep -q .; then
