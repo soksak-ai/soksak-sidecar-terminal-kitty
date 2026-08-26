@@ -14,7 +14,9 @@ fn sidecar_manifest_declares_the_staged_process() {
     let stage = std::env::var("SOKSAK_STAGE_OUT").expect("Make must declare the stage output");
     let stage = Path::new(&stage);
     assert!(stage.is_absolute(), "stage output must be absolute");
-    let relative = process.strip_prefix("dist/").expect("process must be inside dist");
+    let relative = process
+        .strip_prefix("dist/")
+        .expect("process must be inside dist");
     assert!(
         stage.join(relative).is_file(),
         "stage target must contain the declared process"
