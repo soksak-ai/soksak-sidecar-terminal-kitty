@@ -7,6 +7,7 @@ case "$2" in /*) stage_out=$2 ;; *) stage_out=$PWD/$2 ;; esac
 [ -d "$stage_out" ] || { echo "stage output is missing: $stage_out" >&2; exit 1; }
 sdk=${SOKSAK_BUILD_DEPENDENCY_ROOT:?Make supplies SOKSAK_BUILD_DEPENDENCY_ROOT}/targets/$target/kitty-provider
 [ -d "$sdk/runtime/lib" ] || { echo "Kitty SDK runtime is missing: $sdk/runtime/lib" >&2; exit 1; }
+node --test scripts/*.test.mjs
 cargo test --locked --release --target "$target" --no-run
 test_sdk=target/$target/release/deps/kitty-provider
 if [ -e "$test_sdk" ]; then

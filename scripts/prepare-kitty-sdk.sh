@@ -58,6 +58,7 @@ else
 fi
 (cd "$stage" && python3 setup.py kitty-provider-sdk)
 sdk=$stage/build/kitty-provider
+node "$root/scripts/normalize-kitty-sdk.mjs" "$sdk"
 for required in "$sdk/lib/libkitty_provider.a" "$sdk/python/kitty/fast_data_types.so" "$sdk/python-config.json"; do
   [ -f "$required" ] || { echo "Kitty SDK output is missing: $required" >&2; exit 79; }
 done
