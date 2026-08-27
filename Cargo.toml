@@ -16,7 +16,7 @@ name = "soksak-sidecar-terminal-kitty"
 path = "src/main.rs"
 
 [dependencies]
-soksak-kit-sidecar-terminal = { git = "https://github.com/soksak-ai/soksak-kit-sidecar-terminal", rev = "3fe74281ecbc8f73d9a62c185f0178fdf4493ccd", features = ["integration-tests"] }
+soksak-kit-sidecar-terminal = { git = "https://github.com/soksak-ai/soksak-kit-sidecar-terminal", rev = "1f0e6a6d1acd8c6eaec733f76463f907fbc055c2", features = ["integration-tests"] }
 
 [build-dependencies]
 serde_json = "=1.0.150"
