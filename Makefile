@@ -52,7 +52,7 @@ require-out:
 release: require-tooling require-out verify
 	@test -z "$$(git status --porcelain)" || { echo 'release source checkout must be clean' >&2; exit 65; }
 	@set -eu; tool="$$(command -v soksak-sdk)"; tooling_root="$$(cd "$$(dirname "$$tool")/.." && pwd -P)"; \
-		temp_root="$$(node -e 'const {realpathSync}=require("node:fs");const {tmpdir}=require("node:os");process.stdout.write(realpathSync(tmpdir()))')"; work="$$(mktemp -d "$$temp_root/soksak-sidecar-release.XXXXXX")"; trap 'rm -rf "$$work"' EXIT HUP INT TERM; \
+		temp_root="$$(node -e 'const {realpathSync}=require("node:fs");const {tmpdir}=require("node:os");process.stdout.write(realpathSync(tmpdir()))')"; work="$$(mktemp -d "$$temp_root/soksak-sidecar-release.XXXXXX")"; cleanup() { chmod -R u+w "$$work" 2>/dev/null || true; rm -rf "$$work"; }; trap cleanup EXIT HUP INT TERM; \
 		stage="$$work/stage"; package="$$work/package"; artifacts="$$work/artifacts"; mkdir -p "$$stage" "$$package/dist" "$$artifacts"; \
 		SOKSAK_BUILD_DEPENDENCY_ROOT='$(CURDIR)/$(BUILD_DEPENDENCY_ROOT)' scripts/stage-built.sh "$$stage" '$(TARGET)'; \
 		cp "$$stage/sidecar.json" "$$package/sidecar.json"; cp LICENSE THIRD-PARTY-NOTICES "$$package/"; \

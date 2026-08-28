@@ -18,6 +18,7 @@ if (!read("README.md").includes("make lock TARGET=")) throw new Error("README mu
 for (const target of ["require-tooling", "require-out", "release", "attest"]) if (!new RegExp(`^${target}:`, "m").test(makefile)) throw new Error(`Makefile target is missing: ${target}`);
 if (!/^STAGE \?= dist$/m.test(makefile) || /^OUT \?= dist$/m.test(makefile)) throw new Error("Makefile must separate STAGE from release OUT");
 for (const value of ["command -v soksak-sdk", "SDK_VERSION", "soksak-sdk pack-target", "soksak-sdk package", "soksak-sdk attest"]) if (!makefile.includes(value)) throw new Error(`Makefile release boundary is missing: ${value}`);
+if (!makefile.includes('chmod -R u+w "$$work"')) throw new Error("release cleanup must reclaim its read-only SDK copy");
 if (!read("README.md").includes("make attest TARGET=") || !read("README.md").includes("OUT=/absolute/")) throw new Error("README must document owner attestation");
 for (const value of [dependency.repository, dependency.commit, dependency.tools.python]) {
   if (workflow.includes(value)) throw new Error("workflow duplicates build-dependencies.json metadata");
