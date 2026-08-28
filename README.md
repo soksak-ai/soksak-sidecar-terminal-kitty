@@ -13,7 +13,8 @@ make lock TARGET=aarch64-apple-darwin
 make prepare TARGET=aarch64-apple-darwin
 make build TARGET=aarch64-apple-darwin
 make verify TARGET=aarch64-apple-darwin
-make stage TARGET=aarch64-apple-darwin OUT=dist
+make stage TARGET=aarch64-apple-darwin STAGE=dist
+make attest TARGET=aarch64-apple-darwin OUT=/absolute/kitty-release
 ```
 
 `make lock` is the only owner operation that projects changed Cargo declarations into

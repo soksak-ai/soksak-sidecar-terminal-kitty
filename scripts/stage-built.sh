@@ -5,6 +5,7 @@ set -eu
 out=$1
 target=$2
 repository=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+# An absolute candidate output is allowed only outside the source repository.
 case "$out" in ''|/|.|*..*|"$repository"|"$repository"/*) echo 'stage output is unsafe or inside the source repository' >&2; exit 2 ;; esac
 
 name=soksak-sidecar-terminal-kitty

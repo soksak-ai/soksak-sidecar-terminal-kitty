@@ -47,7 +47,7 @@ if (!prepare.includes('stage=$build_root/builds/$target/$commit') ||
 }
 if (!gate.includes('previous=$test_sdk.previous.$$')) throw new Error("Kitty test SDK replacement is not transactional");
 if (!prepare.includes('normalize-kitty-sdk.mjs" "$sdk"')) throw new Error("Kitty prepare does not normalize host-dependent SDK metadata");
-if (!workflow.includes('make stage TARGET="${{ matrix.target }}" OUT=dist')) throw new Error("workflow does not call the owner Make target");
+if (!workflow.includes('make stage TARGET="${{ matrix.target }}" STAGE=dist')) throw new Error("workflow does not call the owner Make target");
 if (build.includes("SOKSAK_KITTY_PROVIDER_SDK") || engine.includes("SOKSAK_KITTY_PROVIDER_SDK")) throw new Error("runtime retains the raw Kitty SDK input");
 if (!build.includes("SOKSAK_BUILD_DEPENDENCY_ROOT")) throw new Error("build.rs does not consume the Make-owned root");
 console.log("build configuration contract: passed");
