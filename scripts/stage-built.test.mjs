@@ -1,17 +1,29 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import {
-  chmodSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync,
+  chmodSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 
 const repository = join(import.meta.dirname, "..");
+const makeWritable = (path) => {
+  const status = lstatSync(path);
+  if (!status.isDirectory()) {
+    chmodSync(path, 0o600);
+    return;
+  }
+  chmodSync(path, 0o700);
+  for (const name of readdirSync(path)) makeWritable(join(path, name));
+};
 
 test("stage replaces a previous patch version and remains idempotent", (context) => {
   const root = mkdtempSync(join(realpathSync(tmpdir()), "kitty-stage-"));
-  context.after(() => rmSync(root, { recursive: true, force: true }));
+  context.after(() => {
+    makeWritable(root);
+    rmSync(root, { recursive: true, force: true });
+  });
   const target = "aarch64-apple-darwin";
   const binary = join(root, "target", target, "release", "soksak-sidecar-terminal-kitty");
   const dependencyRoot = join(root, "sdk");
