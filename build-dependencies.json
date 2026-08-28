@@ -4,7 +4,7 @@
     {
       "id": "kitty-provider-sdk",
       "repository": "https://github.com/min-median-max/kitty.git",
-      "commit": "cea3935b833060176cdfa84ec1837ad8259fe395",
+      "commit": "0696f19e70b8f89a34995dc0d21dbcec3ae31b79",
       "tools": {
         "python": "3.14.2"
       },
