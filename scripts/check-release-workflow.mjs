@@ -15,6 +15,10 @@ const ownerPath = `soksak-sidecars/${manifest.id}`;
 const requireText = (value, label) => { if (!workflow.includes(value)) throw new Error(`release workflow is missing ${label}: ${value}`); };
 if (!/^lock: preflight$/m.test(makefile) || !makefile.includes("cargo metadata --format-version 1")) throw new Error("Makefile must own Cargo lock regeneration");
 if (!read("README.md").includes("make lock TARGET=")) throw new Error("README must document the owner lock target");
+for (const target of ["require-tooling", "require-out", "release", "attest"]) if (!new RegExp(`^${target}:`, "m").test(makefile)) throw new Error(`Makefile target is missing: ${target}`);
+if (!/^STAGE \?= dist$/m.test(makefile) || /^OUT \?= dist$/m.test(makefile)) throw new Error("Makefile must separate STAGE from release OUT");
+for (const value of ["command -v soksak-sdk", "SDK_VERSION", "soksak-sdk pack-target", "soksak-sdk package", "soksak-sdk attest"]) if (!makefile.includes(value)) throw new Error(`Makefile release boundary is missing: ${value}`);
+if (!read("README.md").includes("make attest TARGET=") || !read("README.md").includes("OUT=/absolute/")) throw new Error("README must document owner attestation");
 for (const value of [dependency.repository, dependency.commit, dependency.tools.python]) {
   if (workflow.includes(value)) throw new Error("workflow duplicates build-dependencies.json metadata");
 }
@@ -22,7 +26,7 @@ for (const value of ["spec_url:", "spec_sha256:", "${{ inputs.spec_url }}", "${{
 requireText("actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405", "pinned Python installer");
 requireText("python-version: ${{ steps.build-dependency.outputs.python }}", "manifest-owned Python version");
 requireText('make verify TARGET="${{ matrix.target }}"', "owner Make verification");
-requireText('make stage TARGET="${{ matrix.target }}" OUT=dist', "owner Make staging");
+requireText('make stage TARGET="${{ matrix.target }}" STAGE=dist', "owner Make staging");
 requireText("build-dependency-receipt.json", "SDK receipt in the archive");
 requireText("release-template/sidecar/pack-target.mjs", "canonical target packer");
 requireText(`path: ${ownerPath}`, "owner checkout path");
