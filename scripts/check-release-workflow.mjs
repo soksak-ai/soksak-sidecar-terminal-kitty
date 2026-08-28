@@ -13,6 +13,8 @@ const gate = read("scripts/gate.sh");
 const stage = read("scripts/stage-built.sh");
 const ownerPath = `soksak-sidecars/${manifest.id}`;
 const requireText = (value, label) => { if (!workflow.includes(value)) throw new Error(`release workflow is missing ${label}: ${value}`); };
+if (!/^lock: preflight$/m.test(makefile) || !makefile.includes("cargo metadata --format-version 1")) throw new Error("Makefile must own Cargo lock regeneration");
+if (!read("README.md").includes("make lock TARGET=")) throw new Error("README must document the owner lock target");
 for (const value of [dependency.repository, dependency.commit, dependency.tools.python]) {
   if (workflow.includes(value)) throw new Error("workflow duplicates build-dependencies.json metadata");
 }
