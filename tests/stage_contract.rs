@@ -8,7 +8,10 @@ fn stage_uses_the_declared_cargo_target_directory() {
     assert!(script.contains("target/$target/release/$name"));
     assert!(script.contains("SOKSAK_BUILD_DEPENDENCY_ROOT"));
     assert!(script.contains("targets/$target/kitty-provider"));
-    assert!(script.contains("find \"$out/kitty-provider.next.$$\" -type l"));
+    assert!(script.contains("find \"$next_sdk\" -type l"));
+    assert!(script.contains("STAGED_BUILD_NOT_DETERMINISTIC"));
+    assert!(script.contains("$current_version\" != \"$next_version"));
+    assert!(script.contains("KITTY_STAGED_UNCHANGED"));
 }
 
 #[test]
