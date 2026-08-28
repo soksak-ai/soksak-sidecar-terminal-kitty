@@ -11,6 +11,7 @@ const workflow = read(".github/workflows/release.yml");
 const build = read("build.rs");
 const engine = read("src/engine.rs");
 const prepare = read("scripts/prepare-kitty-sdk.sh");
+const gate = read("scripts/gate.sh");
 const dependency = manifest.dependencies?.[0];
 const keys = (value) => Object.keys(value).sort().join("\n");
 if (manifest.schema !== "soksak-build-dependencies-v1" || manifest.dependencies.length !== 1 ||
@@ -40,6 +41,11 @@ for (const target of ["preflight", "prepare", "build", "verify", "stage"]) {
 }
 if (!makefile.includes("TARGET") || !makefile.includes("SOKSAK_BUILD_DEPENDENCY_ROOT=")) throw new Error("Makefile does not own the addressed build command");
 if (!prepare.includes("soksak-validate build-receipt-create")) throw new Error("Kitty prepare does not use canonical receipt creation");
+if (!prepare.includes('stage=$build_root/builds/$target/$commit') ||
+    !prepare.includes('previous_target=$transaction/previous-target')) {
+  throw new Error("Kitty prepare does not replace a changed declared SDK transactionally");
+}
+if (!gate.includes('previous=$test_sdk.previous.$$')) throw new Error("Kitty test SDK replacement is not transactional");
 if (!prepare.includes('normalize-kitty-sdk.mjs" "$sdk"')) throw new Error("Kitty prepare does not normalize host-dependent SDK metadata");
 if (!workflow.includes('make stage TARGET="${{ matrix.target }}" OUT=dist')) throw new Error("workflow does not call the owner Make target");
 if (build.includes("SOKSAK_KITTY_PROVIDER_SDK") || engine.includes("SOKSAK_KITTY_PROVIDER_SDK")) throw new Error("runtime retains the raw Kitty SDK input");
