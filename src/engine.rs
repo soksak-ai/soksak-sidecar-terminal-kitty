@@ -41,6 +41,33 @@ struct Cell {
     wrapline: u8,
 }
 
+#[repr(C)]
+struct ProviderThemeOverrides {
+    foreground: u32,
+    background: u32,
+    cursor: u32,
+    palette: [u32; 256],
+    has_foreground: u8,
+    has_background: u8,
+    has_cursor: u8,
+    has_palette: [u8; 256],
+}
+
+impl Default for ProviderThemeOverrides {
+    fn default() -> Self {
+        Self {
+            foreground: 0,
+            background: 0,
+            cursor: 0,
+            palette: [0; 256],
+            has_foreground: 0,
+            has_background: 0,
+            has_cursor: 0,
+            has_palette: [0; 256],
+        }
+    }
+}
+
 unsafe extern "C" {
     fn kitty_provider_runtime_init(sdk_root: *const c_char) -> c_int;
     fn kitty_provider_new(columns: u16, rows: u16, scrollback: u32) -> *mut c_void;
@@ -48,6 +75,10 @@ unsafe extern "C" {
     fn kitty_provider_feed(provider: *mut c_void, data: *const u8, length: usize) -> c_int;
     fn kitty_provider_resize(provider: *mut c_void, columns: u16, rows: u16) -> c_int;
     fn kitty_provider_snapshot(provider: *mut c_void, snapshot: *mut Snapshot) -> c_int;
+    fn kitty_provider_theme_overrides(
+        provider: *mut c_void,
+        overrides: *mut ProviderThemeOverrides,
+    ) -> c_int;
     fn kitty_provider_cell(
         provider: *mut c_void,
         row: i32,
@@ -135,6 +166,26 @@ impl Engine {
     }
     pub fn cursor_animation(&self) -> TerminalCursorAnimation {
         TerminalCursorAnimation { interval_ms: 500 }
+    }
+    pub fn theme_overrides(&self) -> TerminalThemeOverrides {
+        let mut raw = ProviderThemeOverrides::default();
+        assert_eq!(
+            unsafe { kitty_provider_theme_overrides(self.provider.as_ptr(), &mut raw) },
+            0
+        );
+        let rgb = |value: u32| TerminalRgb {
+            r: ((value >> 16) & 0xff) as u8,
+            g: ((value >> 8) & 0xff) as u8,
+            b: (value & 0xff) as u8,
+        };
+        let mut overrides = TerminalThemeOverrides::default();
+        overrides.foreground = (raw.has_foreground != 0).then(|| rgb(raw.foreground));
+        overrides.background = (raw.has_background != 0).then(|| rgb(raw.background));
+        overrides.cursor = (raw.has_cursor != 0).then(|| rgb(raw.cursor));
+        for (index, slot) in overrides.ansi.iter_mut().enumerate() {
+            *slot = (raw.has_palette[index] != 0).then(|| rgb(raw.palette[index]));
+        }
+        overrides
     }
     pub fn history_size(&self) -> usize {
         self.snapshot().history as usize
@@ -270,7 +321,7 @@ impl TerminalEngine for Engine {
         Engine::suppressed_replies(self)
     }
     fn theme_overrides(&self) -> TerminalThemeOverrides {
-        TerminalThemeOverrides::default()
+        Engine::theme_overrides(self)
     }
 }
 
