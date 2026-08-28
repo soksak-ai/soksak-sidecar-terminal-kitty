@@ -7,6 +7,11 @@ use soksak_kit_sidecar_terminal::frame::{FrameBaseline, delta};
 use soksak_sidecar_terminal_kitty::Mirror;
 
 #[test]
+fn process_label_control_contract() {
+    soksak_kit_sidecar_terminal::integration::assert_process_label_contract();
+}
+
+#[test]
 fn cursor_style() {
     contract::assert_cursor_style_conforms::<SidecarMirror>();
 }
