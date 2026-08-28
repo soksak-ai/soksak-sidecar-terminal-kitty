@@ -1,9 +1,9 @@
-# soksak-sidecar-terminal-kitty 0.0.8
+# soksak-sidecar-terminal-kitty 0.0.25
 
 Kitty terminal-state provider for `soksak-spec-sidecar-terminal` 0.0.1. Kitty's production Screen
 and VT parser are delivered through the pinned provider SDK; Rust consumes only the SDK's opaque C
 handle and flat snapshot/cell structs. Recovery ordering, alt-screen preservation and restore
-serialization are owned by `soksak-kit-sidecar-terminal` 0.0.2.
+serialization and base-theme composition are owned by `soksak-kit-sidecar-terminal` 0.0.21.
 
 `build-dependencies.json` owns the exact Kitty source, Python tool, target set and SDK tree.
 The Make command graph consumes that declaration and writes a canonical tree receipt:
