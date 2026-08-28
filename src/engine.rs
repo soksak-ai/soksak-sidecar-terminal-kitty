@@ -4,7 +4,8 @@ use std::sync::OnceLock;
 
 use soksak_kit_sidecar_terminal::mirror::TerminalEngine;
 pub use soksak_kit_sidecar_terminal::mirror::{
-    TerminalCell as GridCell, TerminalColor as ColorSnap, TerminalModes as ModeSnap,
+    TerminalCell as GridCell, TerminalColor as ColorSnap, TerminalCursorAnimation,
+    TerminalCursorShape, TerminalCursorStyle, TerminalModes as ModeSnap,
 };
 
 const ATTR_BOLD: u16 = 1 << 0;
@@ -23,6 +24,8 @@ struct Snapshot {
     cursor_x: u32,
     cursor_y: u32,
     modes: u32,
+    cursor_shape: u32,
+    cursor_blinking: u32,
     suppressed_replies: u64,
 }
 
@@ -115,6 +118,22 @@ impl Engine {
     pub fn cursor(&self) -> (usize, usize) {
         let s = self.snapshot();
         (s.cursor_y as usize, s.cursor_x as usize)
+    }
+    pub fn cursor_style(&self) -> TerminalCursorStyle {
+        let snapshot = self.snapshot();
+        let shape = match snapshot.cursor_shape {
+            0 | 1 | 4 => TerminalCursorShape::Block,
+            2 => TerminalCursorShape::Bar,
+            3 => TerminalCursorShape::Underline,
+            value => panic!("unknown Kitty cursor shape: {value}"),
+        };
+        TerminalCursorStyle {
+            shape,
+            blinking: snapshot.cursor_blinking != 0,
+        }
+    }
+    pub fn cursor_animation(&self) -> TerminalCursorAnimation {
+        TerminalCursorAnimation { interval_ms: 500 }
     }
     pub fn history_size(&self) -> usize {
         self.snapshot().history as usize
@@ -227,6 +246,12 @@ impl TerminalEngine for Engine {
     }
     fn cursor(&self) -> (usize, usize) {
         Engine::cursor(self)
+    }
+    fn cursor_style(&self) -> TerminalCursorStyle {
+        Engine::cursor_style(self)
+    }
+    fn cursor_animation(&self) -> TerminalCursorAnimation {
+        Engine::cursor_animation(self)
     }
     fn alt_active(&self) -> bool {
         Engine::alt_active(self)

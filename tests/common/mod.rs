@@ -21,6 +21,23 @@ impl MirrorUnderTest for SidecarMirror {
     fn cold_paint(&self) -> Vec<u8> {
         self.0.cold_paint()
     }
+    fn cursor_style(&self) -> contract::CursorStyle {
+        let style = self.0.cursor_style();
+        contract::CursorStyle {
+            shape: match style.shape {
+                soksak_kit_sidecar_terminal::mirror::TerminalCursorShape::Block => {
+                    contract::CursorShape::Block
+                }
+                soksak_kit_sidecar_terminal::mirror::TerminalCursorShape::Underline => {
+                    contract::CursorShape::Underline
+                }
+                soksak_kit_sidecar_terminal::mirror::TerminalCursorShape::Bar => {
+                    contract::CursorShape::Bar
+                }
+            },
+            blinking: style.blinking,
+        }
+    }
     fn suppressed_replies(&self) -> u64 {
         self.0.suppressed_replies()
     }
