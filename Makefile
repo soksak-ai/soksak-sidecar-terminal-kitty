@@ -3,7 +3,7 @@ SHELL := /bin/sh
 BUILD_DEPENDENCY_ROOT := target/build-dependencies/kitty-provider-sdk
 OUT ?= dist
 
-.PHONY: require-target preflight prepare build stage verify benchmark
+.PHONY: require-target preflight lock prepare build stage verify benchmark
 
 require-target:
 	@test '$(origin TARGET)' = 'command line' && test -n '$(TARGET)' || { echo 'TARGET must be an explicit Make command-line variable' >&2; exit 2; }
@@ -11,6 +11,9 @@ require-target:
 preflight: require-target
 	@scripts/check-build-environment.sh '$(TARGET)'
 	@soksak-validate build-dependencies build-dependencies.json --dependency kitty-provider-sdk --target '$(TARGET)' >/dev/null
+
+lock: preflight
+	@cargo metadata --format-version 1 > /dev/null
 
 prepare: preflight
 	@scripts/prepare-kitty-sdk.sh '$(TARGET)' '$(BUILD_DEPENDENCY_ROOT)'
