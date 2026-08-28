@@ -51,4 +51,7 @@ impl soksak_kit_sidecar_terminal::TerminalStateMirror for Mirror {
     fn suppressed_replies(&self) -> u64 {
         Mirror::suppressed_replies(self)
     }
+    fn theme_overrides(&self) -> soksak_kit_sidecar_terminal::mirror::TerminalThemeOverrides {
+        Mirror::theme_overrides(self)
+    }
 }
