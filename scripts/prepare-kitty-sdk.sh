@@ -8,21 +8,32 @@ case "$build_root" in /*|*..*) echo 'build root must be repository-relative' >&2
 root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 build_root=$root/$build_root
 receipt=$build_root/receipts/$target.json
-if [ -f "$receipt" ]; then
-  soksak-validate build-receipt "$receipt" --dependencies "$root/build-dependencies.json" --output-root "$build_root"
-  echo "KITTY_SDK_REUSED target=$target"
-  exit 0
-fi
-[ ! -e "$build_root/targets/$target" ] || { echo "unverified Kitty SDK output exists for $target" >&2; exit 79; }
-
-mkdir -p "$build_root/sources" "$build_root/.transactions"
+mkdir -p "$build_root/sources" "$build_root/.transactions" "$build_root/.locks"
 transaction=$build_root/.transactions/prepare.$target.$$
 source_next=$build_root/sources/.next.$$
-stage=$build_root/builds/$target
+lock=$build_root/.locks/$target
+remove_tree() {
+  candidate=$1
+  case "$candidate" in "$build_root"/.transactions/*|"$build_root"/targets/"$target") ;; *) echo "refusing unsafe transaction cleanup: $candidate" >&2; exit 79 ;; esac
+  [ ! -e "$candidate" ] || chmod -R u+w "$candidate" 2>/dev/null || true
+  rm -rf -- "$candidate"
+}
+if ! mkdir "$lock" 2>/dev/null; then
+  owner=$(cat "$lock/owner" 2>/dev/null || true)
+  case "$owner" in ''|*[!0-9]*) ;; *) kill -0 "$owner" 2>/dev/null && { echo "Kitty SDK preparation is already running for $target" >&2; exit 79; } ;; esac
+  rmdir "$lock" 2>/dev/null || { echo "Kitty SDK lock has invalid contents: $lock" >&2; exit 79; }
+  mkdir "$lock"
+fi
+printf '%s\n' "$$" > "$lock/owner"
 cleanup() {
   for candidate in "$transaction" "$source_next"; do
-    case "$candidate" in "$build_root"/.transactions/*|"$build_root"/sources/.next.*) rm -rf -- "$candidate" ;; esac
+    case "$candidate" in
+      "$build_root"/.transactions/*) remove_tree "$candidate" ;;
+      "$build_root"/sources/.next.*) rm -rf -- "$candidate" ;;
+    esac
   done
+  rm -f "$lock/owner"
+  rmdir "$lock" 2>/dev/null || true
 }
 trap cleanup EXIT HUP INT TERM
 mkdir -p "$transaction/targets/$target/kitty-provider"
@@ -31,6 +42,35 @@ soksak-validate build-dependencies "$root/build-dependencies.json" --dependency 
 repository=$(node -e 'const v=require(process.argv[1]);process.stdout.write(v.repository)' "$resolution")
 commit=$(node -e 'const v=require(process.argv[1]);process.stdout.write(v.commit)' "$resolution")
 python_version=$(node -e 'const v=require(process.argv[1]);process.stdout.write(v.tools.python)' "$resolution")
+current_target=$build_root/targets/$target
+current_source=$current_target/kitty-provider/source-commit.txt
+for stale in "$build_root"/.transactions/prepare."$target".*; do
+  [ -d "$stale" ] && [ "$stale" != "$transaction" ] || continue
+  stale_owner=${stale##*.}
+  case "$stale_owner" in ''|*[!0-9]*) echo "Kitty SDK transaction has no process owner: $stale" >&2; exit 79 ;; esac
+  kill -0 "$stale_owner" 2>/dev/null && { echo "Kitty SDK transaction is still owned by process $stale_owner" >&2; exit 79; }
+  if [ -e "$stale/previous-target" ]; then
+    [ -f "$receipt" ] && soksak-validate build-receipt "$receipt" --dependencies "$root/build-dependencies.json" --output-root "$build_root" >/dev/null 2>&1 || {
+      echo "interrupted Kitty SDK replacement requires a valid current target: $stale" >&2; exit 79;
+    }
+  fi
+  remove_tree "$stale"
+done
+if [ -f "$receipt" ]; then
+  if soksak-validate build-receipt "$receipt" --dependencies "$root/build-dependencies.json" --output-root "$build_root" > "$transaction/current-validation.log" 2>&1; then
+    cat "$transaction/current-validation.log"
+    echo "KITTY_SDK_REUSED target=$target"
+    exit 0
+  fi
+  if [ ! -f "$current_source" ] || [ "$(cat "$current_source")" = "$commit" ]; then
+    cat "$transaction/current-validation.log" >&2
+    echo "current Kitty SDK receipt is invalid for its declared source" >&2
+    exit 79
+  fi
+elif [ -e "$current_target" ]; then
+  echo "unverified Kitty SDK output exists for $target" >&2
+  exit 79
+fi
 source=$build_root/sources/$commit
 if [ -e "$source" ]; then
   [ -d "$source/.git" ] && [ "$(git -C "$source" remote get-url origin)" = "$repository" ] && \
@@ -48,6 +88,7 @@ else
   mv "$source_next" "$source"
 fi
 
+stage=$build_root/builds/$target/$commit
 if [ -e "$stage" ]; then
   [ -d "$stage" ] && [ -f "$stage/.soksak-build-resolution.json" ] && \
     cmp -s "$resolution" "$stage/.soksak-build-resolution.json" || { echo "Kitty build cache differs from declared inputs" >&2; exit 79; }
@@ -92,8 +133,24 @@ soksak-validate build-receipt-create "$root/build-dependencies.json" --dependenc
   --target "$target" --output-root "$transaction" --out "$transaction/receipts/$target.json"
 soksak-validate build-receipt "$transaction/receipts/$target.json" --dependencies "$root/build-dependencies.json" --output-root "$transaction"
 mkdir -p "$build_root/targets" "$build_root/receipts"
-[ ! -e "$build_root/targets/$target" ] && [ ! -e "$receipt" ] || { echo "Kitty SDK output appeared concurrently" >&2; exit 79; }
+previous_target=$transaction/previous-target
+previous_receipt=$transaction/previous-receipt.json
+if [ -e "$current_target" ]; then
+  [ -f "$receipt" ] || { echo "Kitty SDK target has no receipt" >&2; exit 79; }
+  mv "$current_target" "$previous_target"
+  mv "$receipt" "$previous_receipt"
+fi
 mv "$transaction/targets/$target" "$build_root/targets/$target"
 mv "$transaction/receipts/$target.json" "$receipt"
-soksak-validate build-receipt "$receipt" --dependencies "$root/build-dependencies.json" --output-root "$build_root"
+if ! soksak-validate build-receipt "$receipt" --dependencies "$root/build-dependencies.json" --output-root "$build_root"; then
+  remove_tree "$current_target"
+  rm -f -- "$receipt"
+  if [ -e "$previous_target" ]; then
+    mv "$previous_target" "$current_target"
+    mv "$previous_receipt" "$receipt"
+  fi
+  exit 79
+fi
+remove_tree "$previous_target"
+rm -f -- "$previous_receipt"
 echo "KITTY_SDK_READY target=$target"

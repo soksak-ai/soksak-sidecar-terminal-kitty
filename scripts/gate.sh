@@ -10,16 +10,20 @@ sdk=${SOKSAK_BUILD_DEPENDENCY_ROOT:?Make supplies SOKSAK_BUILD_DEPENDENCY_ROOT}/
 node --test scripts/*.test.mjs
 cargo test --locked --release --target "$target" --no-run
 test_sdk=target/$target/release/deps/kitty-provider
-if [ -e "$test_sdk" ]; then
-  diff -qr "$sdk" "$test_sdk" >/dev/null || { echo "Kitty test SDK conflicts with receipt output" >&2; exit 1; }
-else
-  mkdir -p "$test_sdk.next.$$"
-  (cd "$sdk" && tar -cf - .) | (cd "$test_sdk.next.$$" && tar -xf -)
-  find "$test_sdk.next.$$" -type l -exec false {} +
-  find "$test_sdk.next.$$" -type f -exec chmod a-w {} +
-  find "$test_sdk.next.$$" -type d -exec chmod 0555 {} +
-  chmod u+w "$test_sdk.next.$$"
-  mv "$test_sdk.next.$$" "$test_sdk"
+if [ ! -e "$test_sdk" ] || ! diff -qr "$sdk" "$test_sdk" >/dev/null; then
+  next=$test_sdk.next.$$
+  previous=$test_sdk.previous.$$
+  trap 'chmod -R u+w "$next" "$previous" 2>/dev/null || true; rm -rf -- "$next" "$previous"' EXIT HUP INT TERM
+  mkdir -p "$next"
+  (cd "$sdk" && tar -cf - .) | (cd "$next" && tar -xf -)
+  find "$next" -type l -exec false {} +
+  find "$next" -type f -exec chmod a-w {} +
+  find "$next" -type d -exec chmod 0555 {} +
+  chmod u+w "$next"
+  if [ -e "$test_sdk" ]; then chmod u+w "$test_sdk"; mv "$test_sdk" "$previous"; fi
+  mv "$next" "$test_sdk"
   chmod 0555 "$test_sdk"
+  if [ -e "$previous" ]; then chmod -R u+w "$previous"; rm -rf -- "$previous"; fi
+  trap - EXIT HUP INT TERM
 fi
 SOKSAK_STAGE_OUT="$stage_out" cargo test --locked --release --target "$target"
