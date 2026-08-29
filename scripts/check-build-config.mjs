@@ -17,8 +17,8 @@ const dependency = manifest.dependencies?.[0];
 if (dependency?.commit !== "9df1e0b7c5b93e933e877c36ee45ae62935c9b48") {
   throw new Error("Kitty provider SDK must be pinned to the live mouse encoder revision");
 }
-if (!cargo.includes('soksak-kit-sidecar-terminal = { git = "https://github.com/soksak-ai/soksak-kit-sidecar-terminal", rev = "1863f33176ac40517439c4eb7b749e49d2710ee4"')) {
-  throw new Error("terminal Kit must be pinned to the pointer-aware revision");
+if (!cargo.includes('soksak-kit-sidecar-terminal = { git = "https://github.com/soksak-ai/soksak-kit-sidecar-terminal", rev = "c89ddd642ae63122e48081bc25e38700094aab02"')) {
+  throw new Error("terminal Kit must be pinned to the focus-presentation revision");
 }
 const keys = (value) => Object.keys(value).sort().join("\n");
 if (manifest.schema !== "soksak-build-dependencies-v1" || manifest.dependencies.length !== 1 ||

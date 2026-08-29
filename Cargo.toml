@@ -1,6 +1,6 @@
 [package]
 name = "soksak-sidecar-terminal-kitty"
-version = "0.0.31"
+version = "0.0.32"
 edition = "2024"
 publish = false
 license = "GPL-3.0-only"
@@ -16,7 +16,7 @@ name = "soksak-sidecar-terminal-kitty"
 path = "src/main.rs"
 
 [dependencies]
-soksak-kit-sidecar-terminal = { git = "https://github.com/soksak-ai/soksak-kit-sidecar-terminal", rev = "1863f33176ac40517439c4eb7b749e49d2710ee4", features = ["integration-tests"] }
+soksak-kit-sidecar-terminal = { git = "https://github.com/soksak-ai/soksak-kit-sidecar-terminal", rev = "c89ddd642ae63122e48081bc25e38700094aab02", features = ["integration-tests"] }
 
 [build-dependencies]
 serde_json = "=1.0.150"
