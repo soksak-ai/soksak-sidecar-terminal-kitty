@@ -1,6 +1,6 @@
 {
   "id": "soksak-sidecar-terminal-kitty",
-  "version": "0.0.31",
+  "version": "0.0.32",
   "processRole": "sidecar-terminal-kitty",
   "interface": [
     {
