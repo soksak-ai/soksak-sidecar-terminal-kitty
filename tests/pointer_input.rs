@@ -1,5 +1,5 @@
 use soksak_kit_sidecar_terminal::mirror::{
-    EnginePointerInput, PointerButton, PointerPhase, SelectionModifiers, TerminalEngine,
+    EnginePointerInput, PointerButton, PointerPhase, SelectionModifiers,
 };
 use soksak_sidecar_terminal_kitty::engine::Engine;
 

@@ -80,6 +80,17 @@ unsafe extern "C" {
         provider: *mut c_void,
         overrides: *mut ProviderThemeOverrides,
     ) -> c_int;
+    fn kitty_provider_pointer(
+        provider: *mut c_void,
+        column: i32,
+        row: i32,
+        button: i32,
+        action: i32,
+        modifiers: i32,
+        output: *mut u8,
+        capacity: usize,
+        required: *mut usize,
+    ) -> c_int;
     fn kitty_provider_cell(
         provider: *mut c_void,
         row: i32,
@@ -220,6 +231,50 @@ impl Engine {
             .map(|column| self.cell(row, column))
             .collect()
     }
+    pub fn pointer_input(&mut self, input: EnginePointerInput) -> Result<Vec<u8>, String> {
+        let button = match input.button {
+            soksak_kit_sidecar_terminal::mirror::PointerButton::None => 0,
+            soksak_kit_sidecar_terminal::mirror::PointerButton::Left => 1,
+            soksak_kit_sidecar_terminal::mirror::PointerButton::Middle => 2,
+            soksak_kit_sidecar_terminal::mirror::PointerButton::Right => 3,
+        };
+        let action = match input.phase {
+            soksak_kit_sidecar_terminal::mirror::PointerPhase::Down => 0,
+            soksak_kit_sidecar_terminal::mirror::PointerPhase::Up => 1,
+            soksak_kit_sidecar_terminal::mirror::PointerPhase::Move if button != 0 => 2,
+            soksak_kit_sidecar_terminal::mirror::PointerPhase::Move => 3,
+        };
+        let mut modifiers = 0i32;
+        if input.modifiers.shift { modifiers |= 1; }
+        if input.modifiers.control { modifiers |= 2; }
+        if input.modifiers.alt { modifiers |= 4; }
+        if input.modifiers.meta { modifiers |= 8; }
+        let mut required = 0usize;
+        let first = unsafe {
+            kitty_provider_pointer(
+                self.provider.as_ptr(), i32::from(input.col), i32::from(input.row),
+                button, action, modifiers, std::ptr::null_mut(), 0, &mut required,
+            )
+        };
+        if first != 0 && first != 1 {
+            return Err(format!("Kitty mouse encoder failed: {first}"));
+        }
+        if required == 0 {
+            return Ok(Vec::new());
+        }
+        let mut output = vec![0u8; required];
+        let result = unsafe {
+            kitty_provider_pointer(
+                self.provider.as_ptr(), i32::from(input.col), i32::from(input.row),
+                button, action, modifiers, output.as_mut_ptr(), output.len(), &mut required,
+            )
+        };
+        if result != 0 {
+            return Err(format!("Kitty mouse encoder retry failed: {result}"));
+        }
+        output.truncate(required);
+        Ok(output)
+    }
     fn cell(&self, row: i32, column: u16) -> GridCell {
         let mut cell = Cell::default();
         let mut required = 0usize;
@@ -345,8 +400,8 @@ impl TerminalEngine for Engine {
     fn wheel_input(&mut self, _input: EngineWheelInput) -> Result<Vec<u8>, String> {
         Err("Kitty wheel input is not implemented".into())
     }
-    fn pointer_input(&mut self, _input: EnginePointerInput) -> Result<Vec<u8>, String> {
-        Err("Kitty pointer input is not implemented".into())
+    fn pointer_input(&mut self, input: EnginePointerInput) -> Result<Vec<u8>, String> {
+        Engine::pointer_input(self, input)
     }
 }
 

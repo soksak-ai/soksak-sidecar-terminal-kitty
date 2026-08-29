@@ -1,6 +1,6 @@
 [package]
 name = "soksak-sidecar-terminal-kitty"
-version = "0.0.29"
+version = "0.0.31"
 edition = "2024"
 publish = false
 license = "GPL-3.0-only"
