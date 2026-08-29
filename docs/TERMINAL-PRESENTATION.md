@@ -15,3 +15,9 @@ input again and does not infer presence by comparing an effective color with the
 `tests/conformance.rs::cursor_style` runs the contract-owned DECSCUSR, DEC mode 12, DECTCEM, and
 warm rehydrate cases. `make verify TARGET=aarch64-apple-darwin` verifies the exact declared provider
 SDK and this sidecar.
+
+Pointer reporting uses the Kitty provider fork's `kitty_provider_pointer` ABI. That ABI invokes
+Kitty's live `Screen` mouse encoder, so tracking mode, protocol, button motion, release form, and
+modifiers remain engine-owned. The Sidecar passes normalized cell/button/action/modifier facts and
+does not copy X10, UTF-8, SGR, or motion encoding. `tests/pointer_input.rs` pins SGR press, held
+motion, release, and no-button any-motion. Selection and wheel remain separate open owner rows.
