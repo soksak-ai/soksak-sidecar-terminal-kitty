@@ -4,10 +4,10 @@ use std::sync::OnceLock;
 
 use soksak_kit_sidecar_terminal::mirror::TerminalEngine;
 pub use soksak_kit_sidecar_terminal::mirror::{
-    EnginePointerInput, EngineSelectionPoint, EngineWheelInput, SelectionKind, SelectionModifiers,
-    TerminalCell as GridCell, TerminalColor as ColorSnap, TerminalCursorAnimation,
-    TerminalCursorShape, TerminalCursorStyle, TerminalModes as ModeSnap, TerminalRgb,
-    TerminalThemeOverrides,
+    EnginePointerInput, EngineSelectionPoint, EngineWheelInput, EngineWheelRoute, SelectionKind,
+    SelectionModifiers, TerminalCell as GridCell, TerminalColor as ColorSnap,
+    TerminalCursorAnimation, TerminalCursorShape, TerminalCursorStyle,
+    TerminalModes as ModeSnap, TerminalRgb, TerminalThemeOverrides,
 };
 
 const ATTR_BOLD: u16 = 1 << 0;
@@ -257,6 +257,60 @@ impl Engine {
             .map(|column| self.cell(row, column))
             .collect()
     }
+    /// Encode a Kit-normalized wheel event from Kitty's live Screen state. The common Kit owns
+    /// device-unit accumulation and normal scrollback; this adapter owns only the two PTY routes.
+    /// Mouse reports deliberately pass wheel buttons 4-7 through the provider ABI so X10, UTF-8,
+    /// SGR, URXVT, coordinates, and modifiers remain Kitty rules rather than a Rust copy.
+    pub fn wheel_input(&mut self, input: EngineWheelInput) -> Result<Vec<u8>, String> {
+        match input.route {
+            EngineWheelRoute::AlternateScroll => {
+                if !self.alt_active() || !self.modes().alternate_scroll {
+                    return Err("WHEEL_MODE_CHANGED: alternate scroll is not active".into());
+                }
+                let mut bytes = Vec::new();
+                let vertical = if input.vertical < 0 { b'A' } else { b'B' };
+                for _ in 0..input.vertical.unsigned_abs() {
+                    bytes.extend_from_slice(&[0x1b, b'O', vertical]);
+                }
+                let horizontal = if input.horizontal < 0 { b'D' } else { b'C' };
+                for _ in 0..input.horizontal.unsigned_abs() {
+                    bytes.extend_from_slice(&[0x1b, b'O', horizontal]);
+                }
+                Ok(bytes)
+            }
+            EngineWheelRoute::MouseReport => {
+                let modes = self.modes();
+                if !modes.mouse_click && !modes.mouse_drag && !modes.mouse_motion {
+                    return Err("WHEEL_MODE_CHANGED: mouse reporting is not active".into());
+                }
+                let mut bytes = Vec::new();
+                let vertical = if input.vertical < 0 { 4 } else { 5 };
+                for _ in 0..input.vertical.unsigned_abs() {
+                    bytes.extend(self.native_mouse_input(
+                        input.col,
+                        input.row,
+                        vertical,
+                        0,
+                        input.modifiers,
+                    )?);
+                }
+                let horizontal = if input.horizontal < 0 { 6 } else { 7 };
+                for _ in 0..input.horizontal.unsigned_abs() {
+                    bytes.extend(self.native_mouse_input(
+                        input.col,
+                        input.row,
+                        horizontal,
+                        0,
+                        input.modifiers,
+                    )?);
+                }
+                if bytes.is_empty() {
+                    return Err("WHEEL_ENCODING_UNAVAILABLE: Kitty returned no mouse report".into());
+                }
+                Ok(bytes)
+            }
+        }
+    }
     pub fn pointer_input(&mut self, input: EnginePointerInput) -> Result<Vec<u8>, String> {
         let button = match input.button {
             soksak_kit_sidecar_terminal::mirror::PointerButton::None => 0,
@@ -270,15 +324,25 @@ impl Engine {
             soksak_kit_sidecar_terminal::mirror::PointerPhase::Move if button != 0 => 2,
             soksak_kit_sidecar_terminal::mirror::PointerPhase::Move => 3,
         };
+        self.native_mouse_input(input.col, input.row, button, action, input.modifiers)
+    }
+    fn native_mouse_input(
+        &self,
+        column: u16,
+        row: u16,
+        button: i32,
+        action: i32,
+        input_modifiers: SelectionModifiers,
+    ) -> Result<Vec<u8>, String> {
         let mut modifiers = 0i32;
-        if input.modifiers.shift { modifiers |= 1; }
-        if input.modifiers.control { modifiers |= 2; }
-        if input.modifiers.alt { modifiers |= 4; }
-        if input.modifiers.meta { modifiers |= 8; }
+        if input_modifiers.shift { modifiers |= 1; }
+        if input_modifiers.control { modifiers |= 2; }
+        if input_modifiers.alt { modifiers |= 4; }
+        if input_modifiers.meta { modifiers |= 8; }
         let mut required = 0usize;
         let first = unsafe {
             kitty_provider_pointer(
-                self.provider.as_ptr(), i32::from(input.col), i32::from(input.row),
+                self.provider.as_ptr(), i32::from(column), i32::from(row),
                 button, action, modifiers, std::ptr::null_mut(), 0, &mut required,
             )
         };
@@ -291,7 +355,7 @@ impl Engine {
         let mut output = vec![0u8; required];
         let result = unsafe {
             kitty_provider_pointer(
-                self.provider.as_ptr(), i32::from(input.col), i32::from(input.row),
+                self.provider.as_ptr(), i32::from(column), i32::from(row),
                 button, action, modifiers, output.as_mut_ptr(), output.len(), &mut required,
             )
         };
@@ -533,8 +597,8 @@ impl TerminalEngine for Engine {
     fn selection_range(&self, line: i32) -> Option<(u16, u16)> {
         Engine::selection_range(self, line)
     }
-    fn wheel_input(&mut self, _input: EngineWheelInput) -> Result<Vec<u8>, String> {
-        Err("Kitty wheel input is not implemented".into())
+    fn wheel_input(&mut self, input: EngineWheelInput) -> Result<Vec<u8>, String> {
+        Engine::wheel_input(self, input)
     }
     fn pointer_input(&mut self, input: EnginePointerInput) -> Result<Vec<u8>, String> {
         Engine::pointer_input(self, input)
