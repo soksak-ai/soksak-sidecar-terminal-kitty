@@ -23,6 +23,17 @@ for (const symbol of [
 ]) {
   if (!engine.includes(symbol)) throw new Error(`Kitty provider API is not consumed: ${symbol}`);
 }
+for (const fact of [
+  "mouse_x10: false",
+  "mouse_highlight: false",
+  "modes.mouse_reporting()",
+  "modes.reports_pointer(input.phase, input.button)",
+]) {
+  if (!engine.includes(fact)) throw new Error(`Kitty tracking contract is missing: ${fact}`);
+}
+if (engine.includes("..ModeSnap::default()")) {
+  throw new Error("Kitty tracking facts must not fall back to TerminalModes defaults");
+}
 if (!cargo.includes('soksak-kit-sidecar-terminal = { git = "https://github.com/soksak-ai/soksak-kit-sidecar-terminal", rev = "20fb2d73d13e5bcde592380d3052c5d2204a592f"')) {
   throw new Error("terminal Kit must be pinned to the final 0.0.34 release revision");
 }

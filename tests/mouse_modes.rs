@@ -42,14 +42,23 @@ fn unsupported_legacy_tracking_modes_are_not_aliased_or_admitted() {
 }
 
 #[test]
-fn click_tracking_stays_distinct_from_unsupported_legacy_modes() {
-    let mut engine = Engine::new(80, 24);
-    engine.feed(b"\x1b[?1000h");
+fn supported_tracking_modes_stay_distinct_from_unsupported_legacy_modes() {
+    for (sequence, expected) in [
+        (b"\x1b[?1000h".as_slice(), (true, false, false)),
+        (b"\x1b[?1002h".as_slice(), (false, true, false)),
+        (b"\x1b[?1003h".as_slice(), (false, false, true)),
+    ] {
+        let mut engine = Engine::new(80, 24);
+        engine.feed(sequence);
 
-    let modes = engine.modes();
-    assert!(!modes.mouse_x10);
-    assert!(!modes.mouse_highlight);
-    assert!(modes.mouse_click);
-    assert!(engine.wheel_input(wheel()).is_ok());
-    assert!(engine.pointer_input(pointer()).is_ok());
+        let modes = engine.modes();
+        assert!(!modes.mouse_x10);
+        assert!(!modes.mouse_highlight);
+        assert_eq!(
+            (modes.mouse_click, modes.mouse_drag, modes.mouse_motion),
+            expected,
+        );
+        assert!(engine.wheel_input(wheel()).is_ok());
+        assert!(engine.pointer_input(pointer()).is_ok());
+    }
 }
