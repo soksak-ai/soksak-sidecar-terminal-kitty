@@ -23,8 +23,8 @@ for (const symbol of [
 ]) {
   if (!engine.includes(symbol)) throw new Error(`Kitty provider API is not consumed: ${symbol}`);
 }
-if (!cargo.includes('soksak-kit-sidecar-terminal = { git = "https://github.com/soksak-ai/soksak-kit-sidecar-terminal", rev = "f485b36e6bdd3dad301af3918c631e18d0264de2"')) {
-  throw new Error("terminal Kit must be pinned to the focus-presentation revision");
+if (!cargo.includes('soksak-kit-sidecar-terminal = { git = "https://github.com/soksak-ai/soksak-kit-sidecar-terminal", rev = "20fb2d73d13e5bcde592380d3052c5d2204a592f"')) {
+  throw new Error("terminal Kit must be pinned to the final 0.0.34 release revision");
 }
 const keys = (value) => Object.keys(value).sort().join("\n");
 if (manifest.schema !== "soksak-build-dependencies-v1" || manifest.dependencies.length !== 1 ||
