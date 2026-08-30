@@ -240,7 +240,11 @@ impl Engine {
             bracketed_paste: m & (1 << 0) != 0,
             app_cursor: m & (1 << 1) != 0,
             app_keypad: m & (1 << 2) != 0,
+            // Kitty parses DEC modes 9 and 1001 as unsupported and exposes no
+            // live Screen state for either tracking mode.
+            mouse_x10: false,
             mouse_click: m & (1 << 3) != 0,
+            mouse_highlight: false,
             mouse_drag: m & (1 << 4) != 0,
             mouse_motion: m & (1 << 5) != 0,
             sgr_mouse: m & (1 << 6) != 0,
@@ -280,7 +284,7 @@ impl Engine {
             }
             EngineWheelRoute::MouseReport => {
                 let modes = self.modes();
-                if !modes.mouse_click && !modes.mouse_drag && !modes.mouse_motion {
+                if !modes.mouse_reporting() {
                     return Err("WHEEL_MODE_CHANGED: mouse reporting is not active".into());
                 }
                 let mut bytes = Vec::new();
@@ -312,6 +316,10 @@ impl Engine {
         }
     }
     pub fn pointer_input(&mut self, input: EnginePointerInput) -> Result<Vec<u8>, String> {
+        let modes = self.modes();
+        if !modes.reports_pointer(input.phase, input.button) {
+            return Err("POINTER_MODE_CHANGED: pointer phase is not reported".into());
+        }
         let button = match input.button {
             soksak_kit_sidecar_terminal::mirror::PointerButton::None => 0,
             soksak_kit_sidecar_terminal::mirror::PointerButton::Left => 1,
