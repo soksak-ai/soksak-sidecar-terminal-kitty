@@ -5,6 +5,11 @@ directory and the selected contracts.
 
 ## 2026-08-30
 
+- Release 0.0.36 selects the final terminal Kit 0.0.34 revision.
+- DEC modes 9 and 1001 remain false because Kitty does not retain either mode; no supported
+  tracking state is used as an alias or fallback.
+- Wheel and pointer admission now follows the public `TerminalModes` rules, with owner tests for
+  unsupported legacy modes and distinct 1000, 1002, and 1003 engine facts.
 - Native wheel mouse reports now use Kitty's live provider encoder for X10, UTF-8, SGR, and URXVT
   protocols on both axes with exact repetition and modifiers.
 - Alternate-screen DEC mode 1007 wheel input emits application-cursor arrows on both axes.
