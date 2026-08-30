@@ -20,4 +20,12 @@ Pointer reporting uses the Kitty provider fork's `kitty_provider_pointer` ABI. T
 Kitty's live `Screen` mouse encoder, so tracking mode, protocol, button motion, release form, and
 modifiers remain engine-owned. The Sidecar passes normalized cell/button/action/modifier facts and
 does not copy X10, UTF-8, SGR, or motion encoding. `tests/pointer_input.rs` pins SGR press, held
-motion, release, and no-button any-motion. Selection and wheel remain separate open owner rows.
+motion, release, and no-button any-motion. Selection uses Kitty's live `Screen` selection methods.
+
+Wheel device-unit accumulation and normal-screen scrollback remain common Kit state. Only the two
+PTY routes cross the engine boundary. Mouse-report wheel input passes Kitty button codes 4-7 to the
+same live provider encoder, preserving X10, UTF-8, SGR, URXVT, modifier, coordinate, axis, and
+repetition rules. Alternate scroll is accepted only while both the alternate screen and DEC mode
+1007 are live, and emits application-cursor arrows on both axes. Both routes recheck current engine
+modes and reject stale Kit decisions with `WHEEL_MODE_CHANGED`. `tests/wheel_input.rs` pins these
+rules, including the boundary that keeps ordinary scrollback Kit-owned.

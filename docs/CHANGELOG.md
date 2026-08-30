@@ -3,6 +3,14 @@
 This file records completed changes. Current rules are defined by the other documents in this
 directory and the selected contracts.
 
+## 2026-08-30
+
+- Native wheel mouse reports now use Kitty's live provider encoder for X10, UTF-8, SGR, and URXVT
+  protocols on both axes with exact repetition and modifiers.
+- Alternate-screen DEC mode 1007 wheel input emits application-cursor arrows on both axes.
+- Both PTY routes reject stale mode decisions; device-unit normalization and normal scrollback stay
+  in the common terminal Kit.
+
 ## 2026-08-29
 
 - Pointer events now use the forked Kitty provider's live mouse encoder.
