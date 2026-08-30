@@ -100,6 +100,32 @@ unsafe extern "C" {
         capacity: usize,
         required: *mut usize,
     ) -> c_int;
+    fn kitty_provider_selection_start(
+        provider: *mut c_void,
+        column: i32,
+        row: i32,
+        side: i32,
+        kind: i32,
+    ) -> c_int;
+    fn kitty_provider_selection_update(
+        provider: *mut c_void,
+        column: i32,
+        row: i32,
+        side: i32,
+    ) -> c_int;
+    fn kitty_provider_selection_clear(provider: *mut c_void) -> c_int;
+    fn kitty_provider_selection_text(
+        provider: *mut c_void,
+        output: *mut u8,
+        capacity: usize,
+        required: *mut usize,
+    ) -> c_int;
+    fn kitty_provider_selection_range(
+        provider: *mut c_void,
+        row: i32,
+        start: *mut u16,
+        end: *mut u16,
+    ) -> c_int;
 }
 
 static RUNTIME: OnceLock<()> = OnceLock::new();
@@ -275,6 +301,110 @@ impl Engine {
         output.truncate(required);
         Ok(output)
     }
+    pub fn selection_begin(
+        &mut self,
+        kind: SelectionKind,
+        point: EngineSelectionPoint,
+        _modifiers: SelectionModifiers,
+    ) -> Result<(), String> {
+        let kind = match kind {
+            SelectionKind::Simple => 0,
+            SelectionKind::Semantic => 1,
+            SelectionKind::Line => 2,
+            SelectionKind::Block => 3,
+            SelectionKind::Extend => 4,
+        };
+        let side = match point.side {
+            soksak_kit_sidecar_terminal::mirror::CellSide::Left => 0,
+            soksak_kit_sidecar_terminal::mirror::CellSide::Right => 1,
+        };
+        let result = unsafe {
+            kitty_provider_selection_start(
+                self.provider.as_ptr(),
+                i32::from(point.col),
+                point.line,
+                side,
+                kind,
+            )
+        };
+        if result == 0 {
+            Ok(())
+        } else {
+            Err(format!("Kitty selection start failed: {result}"))
+        }
+    }
+    pub fn selection_update(
+        &mut self,
+        point: EngineSelectionPoint,
+        _modifiers: SelectionModifiers,
+    ) -> Result<(), String> {
+        let side = match point.side {
+            soksak_kit_sidecar_terminal::mirror::CellSide::Left => 0,
+            soksak_kit_sidecar_terminal::mirror::CellSide::Right => 1,
+        };
+        let result = unsafe {
+            kitty_provider_selection_update(
+                self.provider.as_ptr(),
+                i32::from(point.col),
+                point.line,
+                side,
+            )
+        };
+        if result == 0 {
+            Ok(())
+        } else {
+            Err(format!("Kitty selection update failed: {result}"))
+        }
+    }
+    pub fn selection_clear(&mut self) {
+        assert_eq!(unsafe { kitty_provider_selection_clear(self.provider.as_ptr()) }, 0);
+    }
+    pub fn selection_text(&self) -> Option<String> {
+        let mut required = 0usize;
+        let first = unsafe {
+            kitty_provider_selection_text(
+                self.provider.as_ptr(),
+                std::ptr::null_mut(),
+                0,
+                &mut required,
+            )
+        };
+        if first == 2 {
+            return None;
+        }
+        if first != 0 && first != 1 {
+            return None;
+        }
+        let mut output = vec![0u8; required];
+        if required != 0 {
+            let result = unsafe {
+                kitty_provider_selection_text(
+                    self.provider.as_ptr(),
+                    output.as_mut_ptr(),
+                    output.len(),
+                    &mut required,
+                )
+            };
+            if result != 0 {
+                return None;
+            }
+        }
+        output.truncate(required);
+        String::from_utf8(output).ok()
+    }
+    pub fn selection_range(&self, line: i32) -> Option<(u16, u16)> {
+        let mut start = 0u16;
+        let mut end = 0u16;
+        let result = unsafe {
+            kitty_provider_selection_range(
+                self.provider.as_ptr(),
+                line,
+                &mut start,
+                &mut end,
+            )
+        };
+        (result == 0).then_some((start, end))
+    }
     fn cell(&self, row: i32, column: u16) -> GridCell {
         let mut cell = Cell::default();
         let mut required = 0usize;
@@ -381,22 +511,28 @@ impl TerminalEngine for Engine {
     }
     fn selection_begin(
         &mut self,
-        _kind: SelectionKind,
-        _point: EngineSelectionPoint,
-        _modifiers: SelectionModifiers,
+        kind: SelectionKind,
+        point: EngineSelectionPoint,
+        modifiers: SelectionModifiers,
     ) -> Result<(), String> {
-        Err("Kitty selection input is not implemented".into())
+        Engine::selection_begin(self, kind, point, modifiers)
     }
     fn selection_update(
         &mut self,
-        _point: EngineSelectionPoint,
-        _modifiers: SelectionModifiers,
+        point: EngineSelectionPoint,
+        modifiers: SelectionModifiers,
     ) -> Result<(), String> {
-        Err("Kitty selection input is not implemented".into())
+        Engine::selection_update(self, point, modifiers)
     }
-    fn selection_clear(&mut self) {}
-    fn selection_text(&self) -> Option<String> { None }
-    fn selection_range(&self, _line: i32) -> Option<(u16, u16)> { None }
+    fn selection_clear(&mut self) {
+        Engine::selection_clear(self)
+    }
+    fn selection_text(&self) -> Option<String> {
+        Engine::selection_text(self)
+    }
+    fn selection_range(&self, line: i32) -> Option<(u16, u16)> {
+        Engine::selection_range(self, line)
+    }
     fn wheel_input(&mut self, _input: EngineWheelInput) -> Result<Vec<u8>, String> {
         Err("Kitty wheel input is not implemented".into())
     }

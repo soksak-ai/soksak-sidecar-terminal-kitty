@@ -14,8 +14,14 @@ const prepare = read("scripts/prepare-kitty-sdk.sh");
 const gate = read("scripts/gate.sh");
 const cargo = read("Cargo.toml");
 const dependency = manifest.dependencies?.[0];
-if (dependency?.commit !== "9df1e0b7c5b93e933e877c36ee45ae62935c9b48") {
-  throw new Error("Kitty provider SDK must be pinned to the live mouse encoder revision");
+for (const symbol of [
+  "kitty_provider_pointer",
+  "kitty_provider_selection_start",
+  "kitty_provider_selection_update",
+  "kitty_provider_selection_text",
+  "kitty_provider_selection_range",
+]) {
+  if (!engine.includes(symbol)) throw new Error(`Kitty provider API is not consumed: ${symbol}`);
 }
 if (!cargo.includes('soksak-kit-sidecar-terminal = { git = "https://github.com/soksak-ai/soksak-kit-sidecar-terminal", rev = "f485b36e6bdd3dad301af3918c631e18d0264de2"')) {
   throw new Error("terminal Kit must be pinned to the focus-presentation revision");
