@@ -2,7 +2,7 @@ SHELL := /bin/sh
 
 BUILD_DEPENDENCY_ROOT := target/build-dependencies/kitty-provider-sdk
 STAGE ?= dist
-SDK_VERSION := 0.0.18
+SDK_VERSION := 0.0.20
 
 .PHONY: require-target preflight lock prepare build stage verify benchmark require-tooling require-out release attest
 
@@ -11,7 +11,7 @@ require-target:
 
 preflight: require-target
 	@scripts/check-build-environment.sh '$(TARGET)'
-	@soksak-validate build-dependencies build-dependencies.json --dependency kitty-provider-sdk --target '$(TARGET)' >/dev/null
+	@soksak-sdk validate build-dependencies build-dependencies.json --dependency kitty-provider-sdk --target '$(TARGET)' >/dev/null
 
 lock: preflight
 	@cargo metadata --format-version 1 > /dev/null
@@ -28,7 +28,7 @@ stage: build
 
 verify: stage
 	@node scripts/check-build-config.mjs
-	@soksak-validate build-receipt '$(BUILD_DEPENDENCY_ROOT)/receipts/$(TARGET).json' --dependencies build-dependencies.json --output-root '$(BUILD_DEPENDENCY_ROOT)'
+	@soksak-sdk validate build-receipt '$(BUILD_DEPENDENCY_ROOT)/receipts/$(TARGET).json' --dependencies build-dependencies.json --output-root '$(BUILD_DEPENDENCY_ROOT)'
 	@SOKSAK_BUILD_DEPENDENCY_ROOT='$(CURDIR)/$(BUILD_DEPENDENCY_ROOT)' scripts/gate.sh '$(TARGET)' '$(STAGE)'
 
 benchmark: verify

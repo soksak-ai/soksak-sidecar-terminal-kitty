@@ -38,7 +38,7 @@ cleanup() {
 trap cleanup EXIT HUP INT TERM
 mkdir -p "$transaction/targets/$target/kitty-provider"
 resolution=$transaction/resolution.json
-soksak-validate build-dependencies "$root/build-dependencies.json" --dependency kitty-provider-sdk --target "$target" > "$resolution"
+soksak-sdk validate build-dependencies "$root/build-dependencies.json" --dependency kitty-provider-sdk --target "$target" > "$resolution"
 repository=$(node -e 'const v=require(process.argv[1]);process.stdout.write(v.repository)' "$resolution")
 commit=$(node -e 'const v=require(process.argv[1]);process.stdout.write(v.commit)' "$resolution")
 python_version=$(node -e 'const v=require(process.argv[1]);process.stdout.write(v.tools.python)' "$resolution")
@@ -50,14 +50,14 @@ for stale in "$build_root"/.transactions/prepare."$target".*; do
   case "$stale_owner" in ''|*[!0-9]*) echo "Kitty SDK transaction has no process owner: $stale" >&2; exit 79 ;; esac
   kill -0 "$stale_owner" 2>/dev/null && { echo "Kitty SDK transaction is still owned by process $stale_owner" >&2; exit 79; }
   if [ -e "$stale/previous-target" ]; then
-    [ -f "$receipt" ] && soksak-validate build-receipt "$receipt" --dependencies "$root/build-dependencies.json" --output-root "$build_root" >/dev/null 2>&1 || {
+    [ -f "$receipt" ] && soksak-sdk validate build-receipt "$receipt" --dependencies "$root/build-dependencies.json" --output-root "$build_root" >/dev/null 2>&1 || {
       echo "interrupted Kitty SDK replacement requires a valid current target: $stale" >&2; exit 79;
     }
   fi
   remove_tree "$stale"
 done
 if [ -f "$receipt" ]; then
-  if soksak-validate build-receipt "$receipt" --dependencies "$root/build-dependencies.json" --output-root "$build_root" > "$transaction/current-validation.log" 2>&1; then
+  if soksak-sdk validate build-receipt "$receipt" --dependencies "$root/build-dependencies.json" --output-root "$build_root" > "$transaction/current-validation.log" 2>&1; then
     cat "$transaction/current-validation.log"
     echo "KITTY_SDK_REUSED target=$target"
     exit 0
@@ -129,9 +129,9 @@ fi
 find "$transaction/targets/$target/kitty-provider" -type f -exec chmod a-w {} +
 find "$transaction/targets/$target/kitty-provider" -type d -exec chmod 0555 {} +
 mkdir -p "$transaction/receipts"
-soksak-validate build-receipt-create "$root/build-dependencies.json" --dependency kitty-provider-sdk \
+soksak-sdk validate build-receipt-create "$root/build-dependencies.json" --dependency kitty-provider-sdk \
   --target "$target" --output-root "$transaction" --out "$transaction/receipts/$target.json"
-soksak-validate build-receipt "$transaction/receipts/$target.json" --dependencies "$root/build-dependencies.json" --output-root "$transaction"
+soksak-sdk validate build-receipt "$transaction/receipts/$target.json" --dependencies "$root/build-dependencies.json" --output-root "$transaction"
 mkdir -p "$build_root/targets" "$build_root/receipts"
 previous_target=$transaction/previous-target
 previous_receipt=$transaction/previous-receipt.json
@@ -142,7 +142,7 @@ if [ -e "$current_target" ]; then
 fi
 mv "$transaction/targets/$target" "$build_root/targets/$target"
 mv "$transaction/receipts/$target.json" "$receipt"
-if ! soksak-validate build-receipt "$receipt" --dependencies "$root/build-dependencies.json" --output-root "$build_root"; then
+if ! soksak-sdk validate build-receipt "$receipt" --dependencies "$root/build-dependencies.json" --output-root "$build_root"; then
   remove_tree "$current_target"
   rm -f -- "$receipt"
   if [ -e "$previous_target" ]; then

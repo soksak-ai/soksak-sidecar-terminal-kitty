@@ -64,7 +64,7 @@ for (const target of ["preflight", "prepare", "build", "verify", "stage"]) {
   if (!new RegExp(`^${target}:`, "m").test(makefile)) throw new Error(`Makefile target is missing: ${target}`);
 }
 if (!makefile.includes("TARGET") || !makefile.includes("SOKSAK_BUILD_DEPENDENCY_ROOT=")) throw new Error("Makefile does not own the addressed build command");
-if (!prepare.includes("soksak-validate build-receipt-create")) throw new Error("Kitty prepare does not use canonical receipt creation");
+if (!prepare.includes("soksak-sdk validate build-receipt-create")) throw new Error("Kitty prepare does not use canonical receipt creation");
 if (!prepare.includes('stage=$build_root/builds/$target/$commit') ||
     !prepare.includes('previous_target=$transaction/previous-target')) {
   throw new Error("Kitty prepare does not replace a changed declared SDK transactionally");

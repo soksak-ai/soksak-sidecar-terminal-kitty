@@ -3,7 +3,7 @@ set -eu
 
 [ "$#" -eq 1 ] && [ -n "$1" ] || { echo 'usage: check-build-environment.sh <target>' >&2; exit 78; }
 target=$1
-resolution=$(soksak-validate build-dependencies build-dependencies.json --dependency kitty-provider-sdk --target "$target") || exit 78
+resolution=$(soksak-sdk validate build-dependencies build-dependencies.json --dependency kitty-provider-sdk --target "$target") || exit 78
 python_expected=$(printf '%s' "$resolution" | node -e 'let s="";process.stdin.on("data",c=>s+=c).on("end",()=>process.stdout.write(JSON.parse(s).tools.python))')
 case "$(uname -s)-$(uname -m)" in
   Darwin-arm64) host_target=aarch64-apple-darwin; node_platform=darwin; node_arch=arm64; python_machine=arm64 ;;
