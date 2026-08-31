@@ -24,7 +24,7 @@ if (!read("README.md").includes("make attest TARGET=") || !read("README.md").inc
 for (const value of [dependency.repository, dependency.commit, dependency.tools.python]) {
   if (workflow.includes(value)) throw new Error("workflow duplicates build-dependencies.json metadata");
 }
-for (const value of ["sdk_archive_url:", "sdk_archive_sha256:", "sdk_release_url:", "sdk_release_sha256:", "${{ inputs.sdk_archive_url }}", "${{ inputs.sdk_release_url }}", "$RUNNER_TEMP/soksak-sdk", "soksak-sdk prepare", ".dependencies/soksak-spec/release-template"]) requireText(value, "release-train input");
+for (const value of ["sdk_archive_url:", "sdk_archive_sha256:", "sdk_release_url:", "sdk_release_sha256:", "${{ inputs.sdk_archive_url }}", "${{ inputs.sdk_release_url }}", "$RUNNER_TEMP/soksak-sdk", "id: tooling", "node-version: ${{ steps.tooling.outputs.node }}", "soksak-sdk prepare", ".dependencies/soksak-spec/release-template"]) requireText(value, "release-train input");
 requireText("actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405", "pinned Python installer");
 requireText("python-version: ${{ steps.build-dependency.outputs.python }}", "manifest-owned Python version");
 requireText('make verify TARGET="${{ matrix.target }}"', "owner Make verification");
