@@ -25,7 +25,7 @@ directory and the selected contracts.
 
 ## 2026-08-29
 
-- Pointer events now use the forked Kitty provider's live mouse encoder.
+- Pointer events now use the Kitty provider's live mouse encoder.
 - Selection and wheel remain explicit open owner rows.
 - Version 0.0.30 was an unpublished intermediate stage that aligned the pointer-aware Kit and Kitty
   provider SDK. The staging owner retained those bytes and required the completed implementation to
