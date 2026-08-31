@@ -3,6 +3,11 @@
 This file records completed changes. Current rules are defined by the other documents in this
 directory and the selected contracts.
 
+## 2026-08-31
+
+- Release 0.0.37 assigns the rewritten source commit a new immutable release identity; 0.0.36
+  remains bound to its original source commit and bytes.
+
 ## 2026-08-30
 
 - Release 0.0.36 selects the final terminal Kit 0.0.34 revision.
