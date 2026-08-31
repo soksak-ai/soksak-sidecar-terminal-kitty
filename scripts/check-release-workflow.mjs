@@ -24,7 +24,7 @@ if (!read("README.md").includes("make attest TARGET=") || !read("README.md").inc
 for (const value of [dependency.repository, dependency.commit, dependency.tools.python]) {
   if (workflow.includes(value)) throw new Error("workflow duplicates build-dependencies.json metadata");
 }
-for (const value of ["spec_url:", "spec_sha256:", "${{ inputs.spec_url }}", "${{ inputs.spec_sha256 }}"]) requireText(value, "release-train input");
+for (const value of ["sdk_archive_url:", "sdk_archive_sha256:", "sdk_release_url:", "sdk_release_sha256:", "${{ inputs.sdk_archive_url }}", "${{ inputs.sdk_release_url }}", "$RUNNER_TEMP/soksak-sdk", "soksak-sdk prepare", ".dependencies/soksak-spec/release-template"]) requireText(value, "release-train input");
 requireText("actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405", "pinned Python installer");
 requireText("python-version: ${{ steps.build-dependency.outputs.python }}", "manifest-owned Python version");
 requireText('make verify TARGET="${{ matrix.target }}"', "owner Make verification");
@@ -37,7 +37,7 @@ for (const { target, runner } of targets) { requireText(`target: ${target}`, "re
 for (const match of workflow.matchAll(/^\s*-?\s*uses:\s*([^\s#]+)/gm)) {
   if (!/^[^@\s]+@[a-f0-9]{40}$/.test(match[1])) throw new Error(`workflow action is not commit-pinned: ${match[1]}`);
 }
-for (const obsolete of ["repository: min-median-max", "stage.sh", "SOKSAK_KITTY_PROVIDER_SDK", "scripts/package-release.sh", "brew untap"]) {
+for (const obsolete of ["repository: min-median-max", "stage.sh", "SOKSAK_KITTY_PROVIDER_SDK", "scripts/package-release.sh", "brew untap", "spec_url:", "spec_sha256:", ".dependency/spec-package"]) {
   if (workflow.includes(obsolete)) throw new Error(`workflow retains obsolete behavior: ${obsolete}`);
 }
 if (workflow.includes("windows") || workflow.includes("pc-windows")) throw new Error("Kitty release must not declare Windows");
