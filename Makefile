@@ -2,7 +2,7 @@ SHELL := /bin/sh
 
 BUILD_DEPENDENCY_ROOT := target/build-dependencies/kitty-provider-sdk
 STAGE ?= dist
-SDK_VERSION := 0.0.20
+SDK_VERSION := 0.0.21
 
 .PHONY: require-target preflight lock prepare build stage verify benchmark require-tooling require-out release attest
 
