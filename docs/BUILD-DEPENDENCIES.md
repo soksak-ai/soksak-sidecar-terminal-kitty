@@ -3,6 +3,11 @@
 `build-dependencies.json` owns the Kitty provider repository, exact commit, Python version, target
 set, and output tree. The Makefile contains commands only.
 
+The version in `build-dependencies.json` is the toolchain contract. The login profile must select
+the matching versioned Python path before Make runs; `preflight` compares the selected interpreter's
+exact version and architecture with that declaration. A lower, newer, or differently-architected
+interpreter is rejected before preparation or execution. There is no fallback to a system Python.
+
 Preparation keys source and build caches by target and source commit. If the current receipt
 matches the declaration, it is reused. A receipt failure for the same declared source is corruption
 and is refused. A different valid source commit is replaced only after a new transaction has built

@@ -18,6 +18,10 @@ make stage TARGET=aarch64-apple-darwin STAGE=dist
 make attest TARGET=aarch64-apple-darwin OUT=/absolute/kitty-release
 ```
 
+The login profile selects the versioned Python tool named by `build-dependencies.json`. `preflight`
+refuses a lower, newer, or wrong-architecture interpreter before any SDK work starts; it never
+falls back to the system Python.
+
 `make lock` is the only owner operation that projects changed Cargo declarations into
 `Cargo.lock`. Normal build and verification remain `--locked`.
 
