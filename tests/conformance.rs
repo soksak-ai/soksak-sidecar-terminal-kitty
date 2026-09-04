@@ -98,3 +98,8 @@ fn dump_frame_series() {
         println!("wrote {}", path.display());
     }
 }
+
+#[test]
+fn mode_report_restores() {
+    contract::assert_mode_report_restores::<SidecarMirror>();
+}
