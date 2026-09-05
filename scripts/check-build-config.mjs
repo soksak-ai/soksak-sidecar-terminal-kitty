@@ -34,8 +34,8 @@ for (const fact of [
 if (engine.includes("..ModeSnap::default()")) {
   throw new Error("Kitty tracking facts must not fall back to TerminalModes defaults");
 }
-if (!cargo.includes('soksak-kit-sidecar-terminal = { git = "https://github.com/soksak-ai/soksak-kit-sidecar-terminal", rev = "8d1ef287cfdfa9d2d09f5cba1946f33c67589163"')) {
-  throw new Error("terminal Kit must be pinned to the final 0.0.34 release revision");
+if (!cargo.includes('soksak-kit-sidecar-terminal = { git = "https://github.com/soksak-ai/soksak-kit-sidecar-terminal", rev = "97c20b025b042f0de9798a7c57d8c38200886e7d"')) {
+  throw new Error("terminal Kit must be pinned to the final 0.0.36 release revision");
 }
 const keys = (value) => Object.keys(value).sort().join("\n");
 if (manifest.schema !== "soksak-build-dependencies-v1" || manifest.dependencies.length !== 1 ||
