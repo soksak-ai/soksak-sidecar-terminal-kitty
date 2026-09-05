@@ -377,7 +377,7 @@ dependencies = [
 
 [[package]]
 name = "soksak-sidecar-terminal-kitty"
-version = "0.0.42"
+version = "0.0.43"
 dependencies = [
  "serde_json",
  "soksak-contract-terminal",
