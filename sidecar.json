@@ -1,6 +1,6 @@
 {
   "id": "soksak-sidecar-terminal-kitty",
-  "version": "0.0.40",
+  "version": "0.0.41",
   "processRole": "sidecar-terminal-kitty",
   "interface": [
     {
@@ -12,6 +12,6 @@
       "version": "0.0.2"
     }
   ],
-  "runtimeDependencies": {"sidecars": [{"id": "soksak-sidecar-pty", "version": "0.0.23"}]},
+  "runtimeDependencies": {"sidecars": [{"id": "soksak-sidecar-pty", "version": "0.0.24"}]},
   "process": "dist/soksak-sidecar-terminal-kitty"
 }
