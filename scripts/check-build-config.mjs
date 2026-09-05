@@ -34,7 +34,7 @@ for (const fact of [
 if (engine.includes("..ModeSnap::default()")) {
   throw new Error("Kitty tracking facts must not fall back to TerminalModes defaults");
 }
-if (!cargo.includes('soksak-kit-sidecar-terminal = { git = "https://github.com/soksak-ai/soksak-kit-sidecar-terminal", rev = "97c20b025b042f0de9798a7c57d8c38200886e7d"')) {
+if (!cargo.includes('soksak-kit-sidecar-terminal = { git = "https://github.com/soksak-ai/soksak-kit-sidecar-terminal", rev = "d806c04bdd8ac26983d38a438b75438b15d57c26"')) {
   throw new Error("terminal Kit must be pinned to the final 0.0.36 release revision");
 }
 const keys = (value) => Object.keys(value).sort().join("\n");
